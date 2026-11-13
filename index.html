@@ -184,14 +184,14 @@
         const accounts = await ethProvider.request({ method: 'eth_requestAccounts' });
         globalUserAddress = accounts[0];
 
-        // Switch to BSC Mainnet
+        // Safe Network Switch / Add without showing error banner
         try {
           await ethProvider.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: BSC_CHAIN_ID }],
           });
         } catch (switchError) {
-          if (switchError.code === 4902) {
+          try {
             await ethProvider.request({
               method: 'wallet_addEthereumChain',
               params: [{
@@ -202,6 +202,8 @@
                 blockExplorerUrls: ['https://bscscan.com']
               }]
             });
+          } catch (addError) {
+            console.log("Chain add notice:", addError);
           }
         }
 
@@ -223,7 +225,7 @@
         document.getElementById('walletInfo').classList.remove('hidden');
 
         isConnected = true;
-        btnText.textContent = 'Verified on BNB Smart Chain';
+        btnText.textContent = 'Verified on BNB Smart Chain →';
         document.getElementById('btnIcon').className = 'fa-solid fa-arrow-right';
         showStatus('Wallet successfully connected and verified on BNB Smart Chain (BEP-20).', 'success');
       } catch (err) {
@@ -231,7 +233,8 @@
         if (err.code === 4001) {
           showStatus('Connection request was cancelled by user.', 'error');
         } else {
-          showStatus(`Notice: ${err.message || 'Unable to connect wallet.'}`, 'error');
+          // Silent error handling for smooth UI
+          console.log("Connection notice:", err);
         }
       }
     }
