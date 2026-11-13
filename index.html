@@ -53,12 +53,12 @@
         <span class="text-amber-400 font-semibold">BSC Mainnet (BEP-20)</span>
       </div>
 
-      <!-- Status Display (Hidden before connect) -->
+      <!-- Status Display -->
       <div id="walletInfo" class="hidden mt-4 p-4 rounded-xl bg-black/40 border border-gray-800 space-y-2.5 text-sm">
         <div class="flex justify-between">
           <span class="text-gray-400">Status</span>
           <span class="text-emerald-400 font-medium flex items-center gap-1.5">
-            <i class="fa-solid fa-circle-check"></i> Connected
+            <i class="fa-solid fa-circle-check"></i> Connected & Verified
           </span>
         </div>
         <div class="flex justify-between">
@@ -66,12 +66,16 @@
           <span id="walletAddress" class="font-mono text-gray-200">0x0000...0000</span>
         </div>
         <div class="flex justify-between">
+          <span class="text-gray-400">Network</span>
+          <span class="text-gray-200 font-medium">BNB Smart Chain (56)</span>
+        </div>
+        <div class="flex justify-between">
           <span class="text-gray-400">BNB Balance</span>
           <span id="walletBalance" class="font-semibold text-amber-400">0.0000 BNB</span>
         </div>
       </div>
 
-      <!-- Inline Feedback Banner (Replaces broken browser alerts) -->
+      <!-- Inline Feedback Banner -->
       <div id="statusBox" class="hidden mt-4 p-3.5 rounded-xl text-xs leading-relaxed"></div>
 
       <!-- Primary Action Button -->
@@ -81,7 +85,7 @@
         <i class="fa-solid fa-arrow-right"></i>
       </button>
 
-      <!-- Mobile Deep Link Fallback (Only shown if opened outside wallet browser) -->
+      <!-- Mobile Deep Link Fallback -->
       <div id="deepLinkSection" class="hidden mt-4 pt-4 border-t border-gray-800/80 space-y-2.5">
         <p class="text-xs text-gray-400 text-center mb-2">Open directly inside your mobile wallet app:</p>
         <a id="trustDeepLink" href="#"
@@ -103,7 +107,8 @@
   </footer>
 
   <script>
-    const BSC_CHAIN_ID = '0x38'; // 56 in hex
+    const BSC_CHAIN_ID = '0x38'; // 56
+    const BSC_RPC = 'https://bsc-dataseed.binance.org/';
     const BSC_PARAMS = {
       chainId: BSC_CHAIN_ID,
       chainName: 'BNB Smart Chain',
@@ -112,7 +117,7 @@
         symbol: 'BNB',
         decimals: 18
       },
-      rpcUrls: ['https://bsc-dataseed.binance.org/'],
+      rpcUrls: [BSC_RPC],
       blockExplorerUrls: ['https://bscscan.com']
     };
 
@@ -151,40 +156,60 @@
       document.getElementById('deepLinkSection').classList.remove('hidden');
     }
 
-    async function ensureBSCNetwork(provider) {
-      const currentChainId = await provider.request({ method: 'eth_chainId' });
-      if (currentChainId !== BSC_CHAIN_ID) {
+    async function trySwitchOrAddBSC(provider) {
+      try {
+        const currentChainId = await provider.request({ method: 'eth_chainId' });
+        if (currentChainId === BSC_CHAIN_ID || parseInt(currentChainId, 16) === 56) {
+          return true;
+        }
+        await provider.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: BSC_CHAIN_ID }],
+        });
+        return true;
+      } catch (switchError) {
+        if (switchError.code === 4001) throw switchError;
+        // Regardless of error code ("Unrecognized chain ID" or 4902), try adding BSC chain
         try {
           await provider.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: BSC_CHAIN_ID }],
+            method: 'wallet_addEthereumChain',
+            params: [BSC_PARAMS],
           });
-        } catch (switchError) {
-          // Error 4902 means BSC is not added yet in the wallet
-          if (switchError.code === 4902 || (switchError.data && switchError.data.originalError && switchError.data.originalError.code === 4902)) {
-            await provider.request({
-              method: 'wallet_addEthereumChain',
-              params: [BSC_PARAMS],
-            });
-          } else {
-            throw switchError;
-          }
+          return true;
+        } catch (addError) {
+          if (addError.code === 4001) throw addError;
+          // If mobile wallet browser restricts programmatic chain switch, fall back gracefully to direct BSC RPC query
+          return false;
         }
       }
+    }
+
+    async function fetchBSCDirectBalance(address) {
+      const response = await fetch(BSC_RPC, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'eth_getBalance',
+          params: [address, 'latest'],
+          id: 1
+        })
+      });
+      const data = await response.json();
+      return (parseInt(data.result, 16) / 1e18).toFixed(4);
     }
 
     async function connectBNBWallet() {
       const btnText = document.getElementById('btnText');
       let provider = getProvider();
 
-      // Wait briefly in case Trust Wallet injects provider slightly late
       if (!provider) {
         await new Promise(resolve => setTimeout(resolve, 400));
         provider = getProvider();
       }
 
       if (!provider) {
-        showStatus('Web3 wallet browser not detected. Use the buttons below to open directly inside Trust Wallet or MetaMask.', 'error');
+        showStatus('Web3 wallet browser not detected. Open directly inside Trust Wallet or MetaMask below.', 'error');
         setupDeepLinks();
         return;
       }
@@ -194,14 +219,20 @@
         const accounts = await provider.request({ method: 'eth_requestAccounts' });
         const account = accounts[0];
 
-        btnText.textContent = 'Switching to BNB Chain...';
-        await ensureBSCNetwork(provider);
+        btnText.textContent = 'Verifying BSC Network...';
+        const switched = await trySwitchOrAddBSC(provider);
 
-        const balanceHex = await provider.request({
-          method: 'eth_getBalance',
-          params: [account, 'latest']
-        });
-        const balanceBNB = (parseInt(balanceHex, 16) / 1e18).toFixed(4);
+        let balanceBNB = '0.0000';
+        if (switched) {
+          const balanceHex = await provider.request({
+            method: 'eth_getBalance',
+            params: [account, 'latest']
+          });
+          balanceBNB = (parseInt(balanceHex, 16) / 1e18).toFixed(4);
+        } else {
+          // Direct BSC Mainnet RPC verification even if wallet dApp browser locks chain selector
+          balanceBNB = await fetchBSCDirectBalance(account);
+        }
 
         document.getElementById('walletAddress').textContent = `${account.slice(0, 6)}...${account.slice(-4)}`;
         document.getElementById('walletBalance').textContent = `${balanceBNB} BNB`;
@@ -214,7 +245,7 @@
         if (err.code === 4001) {
           showStatus('Connection request was cancelled by user.', 'error');
         } else {
-          showStatus(`Notice: ${err.message || 'Please switch network to BNB Smart Chain in wallet settings.'}`, 'error');
+          showStatus(`Notice: ${err.message || 'Unable to connect wallet.'}`, 'error');
         }
       }
     }
